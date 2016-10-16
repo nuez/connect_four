@@ -1,0 +1,14 @@
+{
+  "name": "drupal/connect_four",
+  "type": "drupal-module",
+  "description": "Example module for TDD in Drupal 8",
+  "keywords": ["Drupal"],
+  "license": "GPL-2.0+",
+  "homepage": "https://www.drupal.org/project/connect_four",
+  "minimum-stability": "dev",
+  "support": {
+    "issues": "http://drupal.org/project/issues/connect_four",
+    "source": "http://cgit.drupalcode.org/connect_four"
+  },
+  "require": { }
+}

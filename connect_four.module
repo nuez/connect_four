@@ -1,0 +1,24 @@
+<?php
+
+/**
+ * @file
+ * Contains connect_four.module..
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function connect_four_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the connect_four module.
+    case 'help.page.connect_four':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Example module for TDD in Drupal 8') . '</p>';
+      return $output;
+
+    default:
+  }
+}

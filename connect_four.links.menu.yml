@@ -1,37 +1,20 @@
-# Game menu items definition
-entity.game.collection:
-  title: 'Game list'
-  route_name: entity.game.collection
-  description: 'List Game entities'
-  parent: system.admin_structure
-  weight: 100
-
-game.admin.structure.settings:
-  title: Game settings
-  description: 'Configure Game entities'
-  route_name: game.settings
-  parent: system.admin_structure
-# Move menu items definition
-entity.move.collection:
+entity.connect_four_move.collection:
   title: 'Move list'
-  route_name: entity.move.collection
+  route_name: entity.connect_four_move.collection
   description: 'List Move entities'
   parent: system.admin_structure
   weight: 100
-
-move.admin.structure.settings:
+connect_four_move.admin.structure.settings:
   title: Move settings
   description: 'Configure Move entities'
-  route_name: move.settings
+  route_name: connect_four_move.settings
   parent: system.admin_structure
-# Game menu items definition
 entity.connect_four_game.collection:
   title: 'Game list'
   route_name: entity.connect_four_game.collection
   description: 'List Game entities'
   parent: system.admin_structure
   weight: 100
-
 connect_four_game.admin.structure.settings:
   title: Game settings
   description: 'Configure Game entities'

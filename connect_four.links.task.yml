@@ -1,0 +1,63 @@
+# Game routing definition
+game.settings_tab:
+  route_name: game.settings
+  title: 'Settings'
+  base_route: game.settings
+entity.game.canonical:
+  route_name: entity.game.canonical
+  base_route: entity.game.canonical
+  title: 'View'
+
+entity.game.edit_form:
+  route_name: entity.game.edit_form
+  base_route: entity.game.canonical
+  title: Edit
+
+entity.game.delete_form:
+  route_name:  entity.game.delete_form
+  base_route:  entity.game.canonical
+  title: Delete
+  weight: 10
+
+# Move routing definition
+move.settings_tab:
+  route_name: move.settings
+  title: 'Settings'
+  base_route: move.settings
+entity.move.canonical:
+  route_name: entity.move.canonical
+  base_route: entity.move.canonical
+  title: 'View'
+
+entity.move.edit_form:
+  route_name: entity.move.edit_form
+  base_route: entity.move.canonical
+  title: Edit
+
+entity.move.delete_form:
+  route_name:  entity.move.delete_form
+  base_route:  entity.move.canonical
+  title: Delete
+  weight: 10
+
+# Game routing definition
+connect_four_game.settings_tab:
+  route_name: connect_four_game.settings
+  title: 'Settings'
+  base_route: connect_four_game.settings
+entity.connect_four_game.canonical:
+  route_name: entity.connect_four_game.canonical
+  base_route: entity.connect_four_game.canonical
+  title: 'View'
+
+entity.connect_four_game.edit_form:
+  route_name: entity.connect_four_game.edit_form
+  base_route: entity.connect_four_game.canonical
+  title: Edit
+
+entity.connect_four_game.delete_form:
+  route_name:  entity.connect_four_game.delete_form
+  base_route:  entity.connect_four_game.canonical
+  title: Delete
+  weight: 10
+

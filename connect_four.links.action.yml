@@ -1,0 +1,15 @@
+entity.game.add_form:
+  route_name: entity.game.add_form
+  title: 'Add Game'
+  appears_on:
+    - entity.game.collection
+entity.move.add_form:
+  route_name: entity.move.add_form
+  title: 'Add Move'
+  appears_on:
+    - entity.move.collection
+entity.connect_four_game.add_form:
+  route_name: entity.connect_four_game.add_form
+  title: 'Add Game'
+  appears_on:
+    - entity.connect_four_game.collection

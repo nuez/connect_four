@@ -1,4 +1,4 @@
-name: connect_four
+name: Connect Four
 type: module
 description: Example module for TDD in Drupal 8
 core: 8.x

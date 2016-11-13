@@ -42,9 +42,9 @@ interface ConnectFourServiceInterface {
    * Count the total connected moves.
    *
    * @param \Drupal\connect_four\Entity\Move $move
-   * @return integer
+   * @return Move[]
    */
-  public function countConnections(Move $move);
+  public function getMaximumMovesInLine(Move $move);
 
   /**
    * Process the Match so it is closed and it declares
@@ -55,4 +55,10 @@ interface ConnectFourServiceInterface {
    * @return Game
    */
   public function declareWinner(User $winner, Game $game);
+
+  /**
+   * @param \Drupal\connect_four\Entity\Game $game
+   * @return Move[]
+   */
+  public function getMoves(Game $game);
 }

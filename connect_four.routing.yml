@@ -1,0 +1,7 @@
+connect_four.form:
+  path: 'connect-four'
+  defaults:
+    _title: 'Play Connect Four'
+    _form: '\Drupal\connect_four\Form\ConnectFourForm'
+  requirements:
+    _permission: 'view published game entities'

@@ -22,3 +22,19 @@ function connect_four_help($route_name, RouteMatchInterface $route_match) {
     default:
   }
 }
+
+/**
+ * Implements hook_theme().
+ */
+function connect_four_theme($existing, $type, $theme, $path) {
+  return [
+    'connect_four' => [
+      'render element' => 'element',
+      'template' => 'connect_four',
+    ],
+    'connect_four_move' => [
+      'render element' => 'element',
+      'template' => 'move',
+    ],
+  ];
+}

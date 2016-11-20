@@ -12,25 +12,6 @@ use Drupal\user\EntityOwnerInterface;
  * @ingroup connect_four
  */
 interface MoveInterface extends ContentEntityInterface, EntityChangedInterface, EntityOwnerInterface {
-  // Add get/set methods for your configuration properties here.
-  /**
-   * Gets the Move name.
-   *
-   * @return string
-   *   Name of the Move.
-   */
-  public function getName();
-
-  /**
-   * Sets the Move name.
-   *
-   * @param string $name
-   *   The Move name.
-   *
-   * @return \Drupal\connect_four\MoveInterface
-   *   The called Move entity.
-   */
-  public function setName($name);
 
   /**
    * Gets the Move creation timestamp.
@@ -52,24 +33,19 @@ interface MoveInterface extends ContentEntityInterface, EntityChangedInterface, 
   public function setCreatedTime($timestamp);
 
   /**
-   * Returns the Move published status indicator.
-   *
-   * Unpublished Move are only visible to restricted users.
-   *
-   * @return bool
-   *   TRUE if the Move is published.
+   * @return int
    */
-  public function isPublished();
+  public function getX();
 
   /**
-   * Sets the published status of a Move.
-   *
-   * @param bool $published
-   *   TRUE to set this Move to published, FALSE to set it to unpublished.
-   *
-   * @return \Drupal\connect_four\MoveInterface
-   *   The called Move entity.
+   * @return int
    */
-  public function setPublished($published);
+  public function getY();
+
+  /**
+   * @return boolean
+   */
+  public function isHome();
+
 
 }

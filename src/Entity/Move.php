@@ -2,7 +2,8 @@
 
 namespace Drupal\connect_four\Entity;
 
-use Drupal\Core\Entity\EntityStorageInterface;
+use Drupal\connect_four\Exception\ConnectFourException;
+use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedTrait;
@@ -19,20 +20,6 @@ use Drupal\user\UserInterface;
  *   id = "connect_four_move",
  *   label = @Translation("Move"),
  *   handlers = {
- *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
- *     "list_builder" = "Drupal\connect_four\MoveListBuilder",
- *     "views_data" = "Drupal\connect_four\Entity\MoveViewsData",
- *
- *     "form" = {
- *       "default" = "Drupal\connect_four\Form\MoveForm",
- *       "add" = "Drupal\connect_four\Form\MoveForm",
- *       "edit" = "Drupal\connect_four\Form\MoveForm",
- *       "delete" = "Drupal\connect_four\Form\MoveDeleteForm",
- *     },
- *     "access" = "Drupal\connect_four\MoveAccessControlHandler",
- *     "route_provider" = {
- *       "html" = "Drupal\connect_four\MoveHtmlRouteProvider",
- *     },
  *   },
  *   base_table = "connect_four_move",
  *   admin_permission = "administer move entities",
@@ -40,27 +27,40 @@ use Drupal\user\UserInterface;
  *     "id" = "id",
  *     "uid" = "user_id",
  *   },
- *   links = {
- *     "canonical" = "/admin/structure/move/{move}",
- *     "add-form" = "/admin/structure/move/add",
- *     "edit-form" = "/admin/structure/move/{move}/edit",
- *     "delete-form" = "/admin/structure/move/{move}/delete",
- *     "collection" = "/admin/structure/move",
- *   },
- *   field_ui_base_route = "move.settings"
  * )
  */
 class Move extends ContentEntityBase implements MoveInterface {
+
   use EntityChangedTrait;
 
-  /**
-   * {@inheritdoc}
-   */
-  public static function preCreate(EntityStorageInterface $storage_controller, array &$values) {
-    parent::preCreate($storage_controller, $values);
-    $values += array(
-      'user_id' => \Drupal::currentUser()->id(),
-    );
+  public static function create(array $values = array()) {
+
+    // Don't allow creating a move outside the playing field.
+    if ($values['x'] >= GAME::WIDTH ||
+      $values['x'] < 0 ||
+      $values['y'] >= GAME::HEIGHT ||
+      $values['y'] < 0) {
+      throw new ConnectFourException('The move cannot be created outside the playing board.');
+    }
+
+    // Don't allow creating a duplicate move.
+    /** @var QueryFactory $queryFactory */
+    $queryFactory = \Drupal::getContainer()->get('entity.query');
+
+    $duplicate = $queryFactory->get('connect_four_move')
+      ->condition('x', $values['x'])
+      ->condition('y', $values['y'])
+      ->condition('game', $values['game'])
+      ->execute();
+
+    if (!empty($duplicate)) {
+      throw new ConnectFourException('The move cannot be created with the same 
+      coordinates of an already existing move.');
+    }
+
+
+    return parent::create($values);
+
   }
 
   /**
@@ -124,18 +124,31 @@ class Move extends ContentEntityBase implements MoveInterface {
   }
 
   /**
-   * {@inheritdoc}
+   * @return int
    */
-  public function isPublished() {
-    return (bool) $this->getEntityKey('status');
+  public function getX() {
+    return $this->get('x')->value;
   }
 
   /**
-   * {@inheritdoc}
+   * @return int
    */
-  public function setPublished($published) {
-    $this->set('status', $published ? NODE_PUBLISHED : NODE_NOT_PUBLISHED);
-    return $this;
+  public function getY() {
+    return $this->get('y')->value;
+  }
+
+  /**
+   * @return Game
+   */
+  public function getGame() {
+    return $this->get('game')->entity;
+  }
+
+  /**
+   * @return bool
+   */
+  public function isHome() {
+    return $this->getOwnerId() == $this->getGame()->getHomeUser()->id();
   }
 
   /**
@@ -189,5 +202,4 @@ class Move extends ContentEntityBase implements MoveInterface {
 
     return $fields;
   }
-
 }

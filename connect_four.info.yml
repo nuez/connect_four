@@ -3,3 +3,12 @@ type: module
 description: Example module for TDD in Drupal 8
 core: 8.x
 package: examples
+dependencies:
+  - drupal:options
+  - drupal:field
+  - drupal:user
+
+test_dependencies:
+  - drupal:options
+  - drupal:field
+  - drupal:user

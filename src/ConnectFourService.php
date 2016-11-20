@@ -5,8 +5,9 @@ namespace Drupal\connect_four;
 use Drupal\connect_four\Entity\Game;
 use Drupal\connect_four\Entity\GameEntity;
 use Drupal\connect_four\Entity\Move;
-use Drupal\Core\Config\Entity\Query\QueryFactory;
+use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\user\Entity\User;
 
 /**
@@ -52,43 +53,11 @@ class ConnectFourService implements ConnectFourServiceInterface {
    * Constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManager $entity_type_manager
+   * @param \Drupal\Core\Entity\Query\QueryFactory $query_factory
    */
   public function __construct(EntityTypeManager $entity_type_manager, QueryFactory $query_factory) {
     $this->entityTypeManager = $entity_type_manager;
     $this->queryFactory = $query_factory;
-  }
-
-
-  /**
-   * Creates a game and returns it.
-   *
-   * @param \Drupal\user\Entity\User $homeUser
-   * @param \Drupal\user\Entity\User $awayUser
-   *
-   * @return \Drupal\connect_four\Entity\Game
-   */
-  public function startGame(User $homeUser, User $awayUser) {
-    // TODO: Implement startGame() method.
-  }
-
-  /**
-   * Detects the corresponding Y position and saves it as a move.
-   *
-   * @param int $x
-   * @return Move
-   */
-  public function processMoveInput($x) {
-    // TODO: Implement processMoveInput() method.
-  }
-
-  /**
-   * Processes the move and sees if it leads to victory.
-   *
-   * @param \Drupal\connect_four\Entity\Move $move
-   * @return Game
-   */
-  public function processMove(Move $move) {
-    // TODO: Implement processMove() method.
   }
 
   /**
@@ -126,7 +95,7 @@ class ConnectFourService implements ConnectFourServiceInterface {
         $this->iterateMoves($adjacentMove, $direction);
 
         $oppositeDirection = new Coordinates($direction->getX() * -1, $direction->getY() * -1);
-        $oppositeCoordinates = new Coordinates($playedMove->getX()+$oppositeDirection->getX(),$playedMove->getY() + $oppositeDirection->getY());
+        $oppositeCoordinates = new Coordinates($playedMove->getX() + $oppositeDirection->getX(), $playedMove->getY() + $oppositeDirection->getY());
         $oppositeMove = $this->getMoveByCoordinates($game, $oppositeCoordinates);
         if ($oppositeMove && $oppositeMove->getOwnerId() == $oppositeMove->getOwnerId()) {
           $this->adjacentMoves[] = $oppositeMove;
@@ -136,8 +105,130 @@ class ConnectFourService implements ConnectFourServiceInterface {
         $adjacentMoves = $this->adjacentMoves > $adjacentMoves ? $this->adjacentMoves : $adjacentMoves;
       }
     }
-    $totalMoves = array_merge($adjacentMoves,[$playedMove]);
+    $totalMoves = array_merge($adjacentMoves, [$playedMove]);
     return $totalMoves;
+  }
+
+  /**
+   * Get Move by Coordinates.
+   *
+   * @param \Drupal\connect_four\Entity\Game $game
+   * @param \Drupal\connect_four\Coordinates $direction
+   *
+   * @return \Drupal\connect_four\Entity\Move|boolean
+   */
+  public function getMoveByCoordinates(Game $game, Coordinates $direction) {
+    $moves = $this->getMoves($game);
+    foreach ($moves as $move) {
+      $x = $move->getX();
+      $y = $move->getY();
+      if ($x == $direction->getX() && $y == $direction->getY()) {
+        return $move;
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * @param \Drupal\connect_four\Entity\Game $game
+   * @return Move[]
+   */
+  public function getMoves(Game $game) {
+    if ($game->getMoves() !== FALSE) {
+      return $game->getMoves();
+    }
+    $movesIds = $this->queryFactory->get('connect_four_move')
+      ->condition('game', $game->id())
+      ->execute();
+
+    $moves = $this->entityTypeManager->getStorage('connect_four_move')->loadMultiple($movesIds);
+    $game->setMoves($moves);
+    return $moves;
+  }
+
+  /**
+   * Get the last game available.
+   *
+   * {@inheritdoc}
+   */
+  public function getLastGame() {
+    $games = $this->queryFactory->get('connect_four_game')
+      ->sort('created', 'DESC')
+      ->range(0, 1)
+      ->execute();
+
+    if (!empty($games)) {
+      return $this->entityTypeManager->getStorage('connect_four_game')
+        ->load(end($games));
+    }
+    else {
+      return FALSE;
+    }
+  }
+
+  /**
+   * Checks if the user can Play a certain move.
+   *
+   * @param \Drupal\connect_four\Entity\Game $game
+   * @param int $x
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *
+   * @return bool Whether the user can play this move or not.
+   */
+  public function canPlayMove(Game $game, $x, AccountInterface $account) {
+    // Grant access to home user if total moves is uneven.
+    if(!$game->hasFinished()) {
+      if ($account->id() == $game->getHomeUser()->id()) {
+        if (count($this->getMoves($game)) % 2 == 0) {
+          if (count($game->getMovesByX($x)) < Game::HEIGHT) {
+            return TRUE;
+          }
+        }
+      }
+      // Grant access to away user if total moves is uneven.
+      elseif ($account->id() == $game->getAwayUser()->id()) {
+        if (count($this->getMoves($game)) % 2 != 0) {
+          if (count($game->getMovesByX($x)) < Game::HEIGHT) {
+            return TRUE;
+          }
+        }
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * Creates a move for the indicated column.
+   *
+   * @param \Drupal\connect_four\Entity\Game $game
+   * @param $x
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *
+   * @return Move
+   */
+  public function playMove(Game $game, $x, AccountInterface $account) {
+    $y = count($game->getMovesByX($x));
+    $move = Move::create([
+      'x' => $x,
+      'y' => $y,
+      'game' => $game->id(),
+      'user_id' => $account->id(),
+      'created' => REQUEST_TIME,
+    ]);
+    $move->save();
+    return $move;
+  }
+
+  /**
+   * set Winner to a game.
+   *
+   * @param \Drupal\connect_four\Entity\Game $game
+   * @param \Drupal\Core\Session\AccountInterface $account
+   */
+  public function declareWinner(Game $game, AccountInterface $account){
+    $game->set('winner', $account->id());
+    $game->set('game_status', GAME::FINISHED);
+    $game->save();
   }
 
   /**
@@ -160,52 +251,5 @@ class ConnectFourService implements ConnectFourServiceInterface {
       $this->adjacentMoves[] = $adjacentMove;
       $this->iterateMoves($adjacentMove, $direction);
     }
-  }
-
-  /**
-   * Get Move by Coordinates.
-   *
-   * @param \Drupal\connect_four\Entity\Game $game
-   * @param \Drupal\connect_four\Coordinates $direction
-   *
-   * @return \Drupal\connect_four\Entity\Move
-   */
-  protected function getMoveByCoordinates(Game $game, Coordinates $direction) {
-    $moves = $this->getMoves($game);
-    foreach ($moves as $move) {
-      $x = $move->getX();
-      $y = $move->getY();
-      if ($x == $direction->getX() && $y == $direction->getY()) {
-        return $move;
-      }
-    }
-  }
-
-
-  /**
-   * Process the Match so it is closed and it declares
-   * the winner.
-   *
-   * @param \Drupal\user\Entity\User $winner
-   * @param \Drupal\connect_four\Entity\Game $game
-   * @return Game
-   */
-  public function declareWinner(User $winner, Game $game) {
-    // TODO: Implement declareWinner() method.
-  }
-
-  /**
-   * @param \Drupal\connect_four\Entity\Game $game
-   * @return Move[]
-   */
-  public function getMoves(Game $game) {
-    if ($game->getMoves()) {
-      return $game->getMoves();
-    }
-    $moves = $this->queryFactory->get('connect_four_move')
-      ->condition('game', $game->id())
-      ->execute();
-    $game->setMoves($moves);
-    return $moves;
   }
 }

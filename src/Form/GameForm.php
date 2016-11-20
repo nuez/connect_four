@@ -17,8 +17,6 @@ class GameForm extends ContentEntityForm {
   public function buildForm(array $form, FormStateInterface $form_state) {
     /* @var $entity \Drupal\connect_four\Entity\Game */
     $form = parent::buildForm($form, $form_state);
-    $entity = $this->entity;
-
     return $form;
   }
 
@@ -28,7 +26,6 @@ class GameForm extends ContentEntityForm {
   public function save(array $form, FormStateInterface $form_state) {
     $entity = $this->entity;
     $status = parent::save($form, $form_state);
-
     switch ($status) {
       case SAVED_NEW:
         drupal_set_message($this->t('Created the %label Game.', [
@@ -41,7 +38,6 @@ class GameForm extends ContentEntityForm {
           '%label' => $entity->label(),
         ]));
     }
-    $form_state->setRedirect('entity.connect_four_game.canonical', ['connect_four_game' => $entity->id()]);
   }
 
 }

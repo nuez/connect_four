@@ -2,12 +2,12 @@
 
 namespace Drupal\connect_four\Entity;
 
-use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Field\BaseFieldDefinition;
 use Drupal\Core\Entity\ContentEntityBase;
 use Drupal\Core\Entity\EntityChangedTrait;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\connect_four\GameInterface;
+use Drupal\user\Entity\User;
 use Drupal\user\UserInterface;
 
 /**
@@ -22,7 +22,6 @@ use Drupal\user\UserInterface;
  *     "view_builder" = "Drupal\Core\Entity\EntityViewBuilder",
  *     "list_builder" = "Drupal\connect_four\GameListBuilder",
  *     "views_data" = "Drupal\connect_four\Entity\GameViewsData",
- *
  *     "form" = {
  *       "default" = "Drupal\connect_four\Form\GameForm",
  *       "add" = "Drupal\connect_four\Form\GameForm",
@@ -38,17 +37,15 @@ use Drupal\user\UserInterface;
  *   admin_permission = "administer game entities",
  *   entity_keys = {
  *     "id" = "id",
- *     "label" = "name",
  *     "status" = "status",
  *   },
  *   links = {
- *     "canonical" = "/admin/structure/connect_four_game/{connect_four_game}",
+ *     "canonical" = "/connect-four/{connect_four_game}",
  *     "add-form" = "/admin/structure/connect_four_game/add",
  *     "edit-form" = "/admin/structure/connect_four_game/{connect_four_game}/edit",
  *     "delete-form" = "/admin/structure/connect_four_game/{connect_four_game}/delete",
  *     "collection" = "/admin/structure/connect_four_game",
  *   },
- *   field_ui_base_route = "connect_four_game.settings"
  * )
  */
 class Game extends ContentEntityBase implements GameInterface {
@@ -57,29 +54,29 @@ class Game extends ContentEntityBase implements GameInterface {
   const STARTED = 0;
 
   const FINISHED = 1;
+
+  const WIDTH = 7;
+
+  const HEIGHT = 6;
+
+  const CONSECUTIVE = 4;
+
   /**
-   * {@inheritdoc}
+   * @var Move[] $moves
    */
-  public static function preCreate(EntityStorageInterface $storage_controller, array &$values) {
-    parent::preCreate($storage_controller, $values);
-    $values += array(
-      'user_id' => \Drupal::currentUser()->id(),
-    );
-  }
+  private $moves;
 
   /**
    * {@inheritdoc}
    */
   public function getName() {
-    return $this->get('name')->value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function setName($name) {
-    $this->set('name', $name);
-    return $this;
+
   }
 
   /**
@@ -142,10 +139,78 @@ class Game extends ContentEntityBase implements GameInterface {
     return $this;
   }
 
+
+  /**
+   * Get the moves that belong to this Game
+   *
+   * @return Move[];
+   */
+  public function getMoves() {
+    return !empty($this->moves) ? $this->moves : FALSE;
+  }
+
+  /**
+   * @param Move[] $moves
+   */
+  public function setMoves($moves) {
+    $this->moves = $moves;
+  }
+
+  /**
+   * @return User
+   */
+  public function getHomeUser() {
+    return $this->get('home')->referencedEntities()[0];
+  }
+
+  /**
+   * @return User
+   */
+  public function getAwayUser() {
+    return $this->get('away')->referencedEntities()[0];
+  }
+
+  /**
+   * Returns all the moves that belong to a certain column.
+   *
+   * @param $x
+   * @return Move[]
+   */
+  public function getMovesByX($x) {
+    $movesByX = [];
+    if (!empty($this->getMoves())) {
+      foreach ($this->getMoves() as $move) {
+        if ($x == $move->getX()) {
+          $movesByX[$move->getY()] = $move;
+        }
+      }
+    }
+    return $movesByX;
+  }
+
+  /**
+   * Whether or not the game has finished.
+   *
+   * @return bool
+   */
+  public function hasFinished() {
+    return $this->get('game_status')->getValue()[0]['value'] == GAME::FINISHED ? TRUE : FALSE;
+  }
+
+  /**
+   * @return User
+   */
+  public function getWinner(){
+    return $this->get('winner')->referencedEntities()[0];
+  }
+
   /**
    * {@inheritdoc}
    */
   public static function baseFieldDefinitions(EntityTypeInterface $entity_type) {
+    $fields = parent::baseFieldDefinitions($entity_type);
+
+
     $fields['id'] = BaseFieldDefinition::create('integer')
       ->setLabel(t('ID'))
       ->setDescription(t('The ID of the Game entity.'))
@@ -156,7 +221,7 @@ class Game extends ContentEntityBase implements GameInterface {
       ->setDescription(t('The user ID of Home Player.'))
       ->setSetting('target_type', 'user')
       ->setSetting('handler', 'default')
-      ->setDefaultValueCallback('Drupal\node\Entity\Node::getCurrentUserId')
+      ->setRequired(TRUE)
       ->setDisplayOptions('view', array(
         'label' => 'hidden',
         'type' => 'author',
@@ -180,7 +245,7 @@ class Game extends ContentEntityBase implements GameInterface {
       ->setDescription(t('The user ID of Home Player.'))
       ->setSetting('target_type', 'user')
       ->setSetting('handler', 'default')
-      ->setDefaultValueCallback('Drupal\node\Entity\Node::getCurrentUserId')
+      ->setRequired(TRUE)
       ->setDisplayOptions('view', array(
         'label' => 'hidden',
         'type' => 'author',
@@ -199,12 +264,21 @@ class Game extends ContentEntityBase implements GameInterface {
       ->setDisplayConfigurable('form', TRUE)
       ->setDisplayConfigurable('view', TRUE);
 
-    $fields['status'] = BaseFieldDefinition::create('list_integer')
+    $fields['status'] = BaseFieldDefinition::create('boolean')
+      ->setLabel(t('Publishing status'))
+      ->setDescription(t('A boolean indicating whether the node is published.'))
+      ->setRevisionable(TRUE)
+      ->setTranslatable(TRUE)
+      ->setDefaultValue(TRUE);
+
+    $fields['game_status'] = BaseFieldDefinition::create('list_integer')
       ->setLabel(t('Game status'))
       ->setSetting('allowed_values', [
         self::STARTED => t('Started'),
         self::FINISHED => t('Finished'),
       ])
+      ->setDefaultValue(self::STARTED)
+      ->setRequired(TRUE)
       ->setRevisionable(FALSE)
       ->setTranslatable(FALSE);
 
@@ -217,11 +291,17 @@ class Game extends ContentEntityBase implements GameInterface {
       ->setLabel(t('Configuration'))
       ->setDescription(t('Serialized configuration for the tournament'));
 
-    $fields['created'] = BaseFieldDefinition::create('created')
-      ->setLabel(t('Created'))
+    $fields['changed'] = BaseFieldDefinition::create('changed')
+      ->setLabel(t('Changed'))
+      ->setRequired(TRUE)
       ->setDescription(t('The time that the entity was created.'));
 
+    $fields['created'] = BaseFieldDefinition::create('changed')
+      ->setLabel(t('Created'))
+      ->setRequired(TRUE)
+      ->setDescription(t('The time that the entity was created.'));
 
     return $fields;
   }
+
 }

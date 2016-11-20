@@ -1,8 +1,10 @@
 <?php
 
 namespace Drupal\connect_four;
+
 use Drupal\connect_four\Entity\Game;
 use Drupal\connect_four\Entity\Move;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\user\Entity\User;
 
 /**
@@ -13,32 +15,6 @@ use Drupal\user\Entity\User;
 interface ConnectFourServiceInterface {
 
   /**
-   * Creates a game and returns it.
-   *
-   * @param \Drupal\user\Entity\User $homeUser
-   * @param \Drupal\user\Entity\User $awayUser
-   *
-   * @return \Drupal\connect_four\Entity\Game
-   */
-  public function startGame(User $homeUser, User $awayUser);
-
-  /**
-   * Detects the corresponding Y position and saves it as a move.
-   *
-   * @param int $x
-   * @return Move
-   */
-  public function processMoveInput($x);
-
-  /**
-   * Processes the move and sees if it leads to victory.
-   *
-   * @param \Drupal\connect_four\Entity\Move $move
-   * @return Game
-   */
-  public function processMove(Move $move);
-
-  /**
    * Count the total connected moves.
    *
    * @param \Drupal\connect_four\Entity\Move $move
@@ -47,18 +23,54 @@ interface ConnectFourServiceInterface {
   public function getMaximumMovesInLine(Move $move);
 
   /**
-   * Process the Match so it is closed and it declares
-   * the winner.
+   * Get Move by Coordinates.
    *
-   * @param \Drupal\user\Entity\User $winner
    * @param \Drupal\connect_four\Entity\Game $game
-   * @return Game
+   * @param \Drupal\connect_four\Coordinates $direction
+   *
+   * @return \Drupal\connect_four\Entity\Move|boolean
    */
-  public function declareWinner(User $winner, Game $game);
+  public function getMoveByCoordinates(Game $game, Coordinates $direction);
 
   /**
    * @param \Drupal\connect_four\Entity\Game $game
    * @return Move[]
    */
   public function getMoves(Game $game);
+
+  /**
+   * Get the last open game.
+   *
+   * @return Game|boolean
+   */
+  public function getLastGame();
+
+  /**
+   * Checks if a user has the permission to play a move.
+   *
+   * @param \Drupal\connect_four\Entity\Game $game
+   * @param int $x
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *
+   * @return bool TRUE if allowed, FALSE if not allowed.
+   * TRUE if allowed, FALSE if not allowed.
+   */
+  public function canPlayMove(Game $game, $x, AccountInterface $account);
+
+  /**
+   * @param \Drupal\connect_four\Entity\Game $game
+   * @param $x
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *
+   * @return Move
+   */
+  public function playMove(Game $game, $x, AccountInterface $account);
+
+  /**
+   * @param \Drupal\connect_four\Entity\Game $game
+   * @param \Drupal\Core\Session\AccountInterface $account
+   * @return void
+   */
+  public function declareWinner(Game $game, AccountInterface $account);
+
 }

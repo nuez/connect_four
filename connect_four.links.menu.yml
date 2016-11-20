@@ -1,14 +1,3 @@
-entity.connect_four_move.collection:
-  title: 'Move list'
-  route_name: entity.connect_four_move.collection
-  description: 'List Move entities'
-  parent: system.admin_structure
-  weight: 100
-connect_four_move.admin.structure.settings:
-  title: Move settings
-  description: 'Configure Move entities'
-  route_name: connect_four_move.settings
-  parent: system.admin_structure
 entity.connect_four_game.collection:
   title: 'Game list'
   route_name: entity.connect_four_game.collection

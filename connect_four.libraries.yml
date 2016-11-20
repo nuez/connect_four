@@ -1,0 +1,5 @@
+connect_four_styles:
+  version: 1.x
+  css:
+    theme:
+      css/connect_four.css: {}

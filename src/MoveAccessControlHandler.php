@@ -17,23 +17,7 @@ class MoveAccessControlHandler extends EntityAccessControlHandler {
    * {@inheritdoc}
    */
   protected function checkAccess(EntityInterface $entity, $operation, AccountInterface $account) {
-    /** @var \Drupal\connect_four\MoveInterface $entity */
-    switch ($operation) {
-      case 'view':
-        if (!$entity->isPublished()) {
-          return AccessResult::allowedIfHasPermission($account, 'view unpublished move entities');
-        }
-        return AccessResult::allowedIfHasPermission($account, 'view published move entities');
-
-      case 'update':
-        return AccessResult::allowedIfHasPermission($account, 'edit move entities');
-
-      case 'delete':
-        return AccessResult::allowedIfHasPermission($account, 'delete move entities');
-    }
-
-    // Unknown operation, no opinion.
-    return AccessResult::neutral();
+    return AccessResult::forbidden();
   }
 
   /**

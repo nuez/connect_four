@@ -2,8 +2,11 @@
 
 namespace Drupal\connect_four;
 
+use Drupal\connect_four\Entity\Move;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityChangedInterface;
+use Drupal\Core\Session\AccountInterface;
+use Drupal\user\Entity\User;
 use Drupal\user\EntityOwnerInterface;
 
 /**
@@ -72,4 +75,42 @@ interface GameInterface extends ContentEntityInterface, EntityChangedInterface, 
    */
   public function setPublished($published);
 
+
+  /**
+   * Get the moves that belong to this Game
+   *
+   * @return Move[];
+   */
+  public function getMoves();
+
+  /**
+   * @param Move[] $moves
+   */
+  public function setMoves($moves);
+
+  /**
+   * @return User
+   */
+  public function getHomeUser();
+
+  /**
+   * @return User
+   */
+  public function getAwayUser();
+
+  /**
+   * @param int The X coordinate.
+   * @return Move[]
+   */
+  public function getMovesByX($x);
+
+  /**
+   * @return bool
+   */
+  public function hasFinished();
+
+  /**
+   * @return User;
+   */
+  public function getWinner();
 }

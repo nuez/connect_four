@@ -33,12 +33,6 @@ interface ConnectFourServiceInterface {
   public function getMoveByCoordinates(Game $game, Coordinates $direction);
 
   /**
-   * @param \Drupal\connect_four\Entity\Game $game
-   * @return Move[]
-   */
-  public function getMoves(Game $game);
-
-  /**
    * Get the last open game.
    *
    * @return Game|boolean
@@ -69,7 +63,7 @@ interface ConnectFourServiceInterface {
   /**
    * @param \Drupal\connect_four\Entity\Game $game
    * @param \Drupal\Core\Session\AccountInterface $account
-   * @return void
+   * @return Game
    */
   public function declareWinner(Game $game, AccountInterface $account);
 

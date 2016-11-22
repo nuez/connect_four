@@ -1,5 +1,5 @@
 services:
   connect_four.service:
     class: Drupal\connect_four\ConnectFourService
-    arguments: ['@entity_type.manager', '@entity.query']
+    arguments: ['@entity_type.manager', '@entity.query','@current_user']
 

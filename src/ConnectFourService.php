@@ -8,6 +8,7 @@ use Drupal\connect_four\Entity\Move;
 use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\Session\AccountProxy;
 use Drupal\user\Entity\User;
 
 /**
@@ -28,6 +29,16 @@ class ConnectFourService implements ConnectFourServiceInterface {
   protected $queryFactory;
 
   /**
+   * @var \Drupal\Core\Session\AccountProxy
+   */
+  protected $accountProxy;
+
+  /**
+   * @var Move[]
+   */
+  private $adjacentMoves;
+
+  /**
    * An array of all possible directions to check (so excluding 'above')
    *
    * @return Position[]
@@ -45,19 +56,16 @@ class ConnectFourService implements ConnectFourServiceInterface {
   }
 
   /**
-   * @var Move[]
-   */
-  private $adjacentMoves;
-
-  /**
    * Constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManager $entity_type_manager
    * @param \Drupal\Core\Entity\Query\QueryFactory $query_factory
+   * @param \Drupal\Core\Session\AccountProxy $account_proxy
    */
-  public function __construct(EntityTypeManager $entity_type_manager, QueryFactory $query_factory) {
+  public function __construct(EntityTypeManager $entity_type_manager, QueryFactory $query_factory, AccountProxy $account_proxy) {
     $this->entityTypeManager = $entity_type_manager;
     $this->queryFactory = $query_factory;
+    $this->accountProxy = $account_proxy;
   }
 
   /**
@@ -118,7 +126,7 @@ class ConnectFourService implements ConnectFourServiceInterface {
    * @return \Drupal\connect_four\Entity\Move|boolean
    */
   public function getMoveByCoordinates(Game $game, Coordinates $direction) {
-    $moves = $this->getMoves($game);
+    $moves = $game->getMoves();
     foreach ($moves as $move) {
       $x = $move->getX();
       $y = $move->getY();
@@ -127,23 +135,6 @@ class ConnectFourService implements ConnectFourServiceInterface {
       }
     }
     return FALSE;
-  }
-
-  /**
-   * @param \Drupal\connect_four\Entity\Game $game
-   * @return Move[]
-   */
-  public function getMoves(Game $game) {
-    if ($game->getMoves() !== FALSE) {
-      return $game->getMoves();
-    }
-    $movesIds = $this->queryFactory->get('connect_four_move')
-      ->condition('game', $game->id())
-      ->execute();
-
-    $moves = $this->entityTypeManager->getStorage('connect_four_move')->loadMultiple($movesIds);
-    $game->setMoves($moves);
-    return $moves;
   }
 
   /**
@@ -179,7 +170,7 @@ class ConnectFourService implements ConnectFourServiceInterface {
     // Grant access to home user if total moves is uneven.
     if(!$game->hasFinished()) {
       if ($account->id() == $game->getHomeUser()->id()) {
-        if (count($this->getMoves($game)) % 2 == 0) {
+        if (count($game->getMoves()) % 2 == 0) {
           if (count($game->getMovesByX($x)) < Game::HEIGHT) {
             return TRUE;
           }
@@ -187,7 +178,7 @@ class ConnectFourService implements ConnectFourServiceInterface {
       }
       // Grant access to away user if total moves is uneven.
       elseif ($account->id() == $game->getAwayUser()->id()) {
-        if (count($this->getMoves($game)) % 2 != 0) {
+        if (count($game->getMoves()) % 2 != 0) {
           if (count($game->getMovesByX($x)) < Game::HEIGHT) {
             return TRUE;
           }
@@ -216,6 +207,10 @@ class ConnectFourService implements ConnectFourServiceInterface {
       'created' => REQUEST_TIME,
     ]);
     $move->save();
+    $movesInLine = $this->getMaximumMovesInLine($move);
+    if(count($movesInLine) == Game::CONSECUTIVE){
+      $this->declareWinner($game, $account);
+    }
     return $move;
   }
 
@@ -226,9 +221,11 @@ class ConnectFourService implements ConnectFourServiceInterface {
    * @param \Drupal\Core\Session\AccountInterface $account
    */
   public function declareWinner(Game $game, AccountInterface $account){
-    $game->set('winner', $account->id());
+    $game->set('winner', $account);
     $game->set('game_status', GAME::FINISHED);
     $game->save();
+
+    return $game;
   }
 
   /**

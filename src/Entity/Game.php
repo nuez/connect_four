@@ -146,7 +146,13 @@ class Game extends ContentEntityBase implements GameInterface {
    * @return Move[];
    */
   public function getMoves() {
-    return !empty($this->moves) ? $this->moves : FALSE;
+    $queryFactory = \Drupal::getContainer()->get('entity.query');
+    $entityTypeManager = \Drupal::getContainer()->get('entity_type.manager');
+    $movesIds = $queryFactory->get('connect_four_move')
+      ->condition('game', $this->id())
+      ->execute();
+    $moves = $entityTypeManager->getStorage('connect_four_move')->loadMultiple($movesIds);
+    return $moves;
   }
 
   /**
@@ -201,7 +207,7 @@ class Game extends ContentEntityBase implements GameInterface {
    * @return User
    */
   public function getWinner(){
-    return $this->get('winner')->referencedEntities()[0];
+    return $this->get('winner')->entity;
   }
 
   /**

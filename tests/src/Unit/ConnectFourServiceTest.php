@@ -11,6 +11,7 @@ use Drupal\connect_four\Entity\Game;
 use Drupal\connect_four\Entity\Move;
 use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Session\AccountProxy;
 use Drupal\Tests\UnitTestCase;
 use Drupal\user\Entity\User;
 use Prophecy\Prophecy\ProphecyInterface;
@@ -40,13 +41,20 @@ class ConnectFourServiceTest extends UnitTestCase {
   protected $queryFactory;
 
   /**
+   * @var AccountProxy
+   */
+  protected $accountProxy;
+
+
+  /**
    * Setup the test.
    */
   public function setUp() {
     parent::setUp();
     $this->entityTypeManager = $this->prophesize(EntityTypeManager::class);
     $this->queryFactory = $this->prophesize(QueryFactory::class);
-    $this->sut = new ConnectFourService($this->entityTypeManager->reveal(), $this->queryFactory->reveal());
+    $this->accountProxy = $this->prophesize(AccountProxy::class);
+    $this->sut = new ConnectFourService($this->entityTypeManager->reveal(), $this->queryFactory->reveal(), $this->accountProxy->reveal());
   }
 
   /**
@@ -59,14 +67,17 @@ class ConnectFourServiceTest extends UnitTestCase {
     // played moves is even.
     /** @var User|ProphecyInterface $homeUser */
     $homeUser = $this->prophesize(User::class);
+    $homeUser->id()->willReturn(1);
 
     /** @var User|ProphecyInterface $awayUser */
     $awayUser = $this->prophesize(User::class);
+    $awayUser->id()->willReturn(2);
 
     /** @var Game|ProphecyInterface $game */
     $game = $this->prophesize(Game::class);
     $game->getHomeUser()->willReturn($homeUser);
     $game->getAwayUser()->willReturn($awayUser);
+    $game->hasFinished()->willReturn(FALSE);
 
     $game->getMoves()->willReturn([
       $this->prophesize(Move::class)->reveal(),

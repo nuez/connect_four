@@ -150,10 +150,6 @@ class ConnectFourForm extends FormBase implements FormInterface {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $column = $form_state->getTriggeringElement()['#column'];
-    $move = $this->connectFourService->playMove($this->game, $column, $this->accountProxy->getAccount());
-    $movesInLine = $this->connectFourService->getMaximumMovesInLine($move);
-    if(count($movesInLine) == Game::CONSECUTIVE){
-      $this->connectFourService->declareWinner($this->game, $this->accountProxy->getAccount());
-    }
+    $this->connectFourService->playMove($this->game, $column, $this->accountProxy->getAccount());
   }
 }

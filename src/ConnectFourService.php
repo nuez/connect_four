@@ -221,7 +221,7 @@ class ConnectFourService implements ConnectFourServiceInterface {
    * @param \Drupal\Core\Session\AccountInterface $account
    */
   public function declareWinner(Game $game, AccountInterface $account){
-    $game->set('winner', $account);
+    $game->set('winner', $account->id());
     $game->set('game_status', GAME::FINISHED);
     $game->save();
 

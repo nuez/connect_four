@@ -46,8 +46,8 @@ class ConnectFourFunctionalTest extends BrowserTestBase  {
    */
   protected function setUp() {
     parent::setUp();
-    $this->homeUser = $this->drupalCreateUser(['view published game entities']);
-    $this->awayUser = $this->drupalCreateUser(['view published game entities']);
+    $this->homeUser = $this->drupalCreateUser(['view published game entities'], 'home');
+    $this->awayUser = $this->drupalCreateUser(['view published game entities'], 'away');
     $this->game = Game::create([
       'home' => $this->homeUser,
       'away' => $this->awayUser,
@@ -88,6 +88,35 @@ class ConnectFourFunctionalTest extends BrowserTestBase  {
     $this->assertSession()->buttonExists('Play');
     $this->drupalLogin($this->awayUser);
     $this->assertSession()->buttonNotExists('Play');
+  }
+
+  /**
+   * Tests if Home user wins after playing four in one column.
+   */
+  public function testHomeWins(){
+    $this->drupalLogin($this->homeUser);
+    $this->drupalGet('connect-four');
+    $this->click('#edit-play');
+    $this->drupalLogin($this->awayUser);
+    $this->drupalGet('connect-four');
+    $this->click('#edit-play--2');
+    $this->drupalLogin($this->homeUser);
+    $this->drupalGet('connect-four');
+    $this->click('#edit-play');
+    $this->drupalLogin($this->awayUser);
+    $this->drupalGet('connect-four');
+    $this->click('#edit-play--2');
+    $this->drupalLogin($this->homeUser);
+    $this->drupalGet('connect-four');
+    $this->click('#edit-play');
+    $this->drupalLogin($this->awayUser);
+    $this->drupalGet('connect-four');
+    $this->click('#edit-play--2');
+    $this->drupalLogin($this->homeUser);
+    $this->drupalGet('connect-four');
+    $this->click('#edit-play');
+    $this->assertSession()->elementTextContains('css', '#connect-four-form', 'winner');
+    $this->assertSession()->elementTextContains('css', '#connect-four-form', 'home');
   }
 }
 

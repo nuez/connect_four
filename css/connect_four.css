@@ -1,6 +1,24 @@
+.empty,
+.home,
+.away{
+    height:30px;
+    font-size:10px;
+    text-align:center;
+    width:calc(100% / 7);
+}
+
 .home{
-    background:green;
+    background:red;
+}
+.home:after{
+    color:white;
+    content:'home';
 }
 .away{
-    background:blue;
+    background:yellow;
+}
+
+.away:after{
+    color:black;
+    content:'away';
 }

@@ -86,6 +86,7 @@ class ConnectFourFunctionalTest extends BrowserTestBase  {
     $this->drupalLogin($this->homeUser);
     $this->drupalGet('connect-four');
     $this->assertSession()->buttonExists('Play');
+    $this->assertSession()->elementsCount('css', '#connect-four-form input[type="submit"]', 7);
     $this->drupalLogin($this->awayUser);
     $this->assertSession()->buttonNotExists('Play');
   }
@@ -96,25 +97,25 @@ class ConnectFourFunctionalTest extends BrowserTestBase  {
   public function testHomeWins(){
     $this->drupalLogin($this->homeUser);
     $this->drupalGet('connect-four');
-    $this->click('#edit-play');
+    $this->click('#connect-four-form th:nth-child(1) input[type="submit"]');
     $this->drupalLogin($this->awayUser);
     $this->drupalGet('connect-four');
-    $this->click('#edit-play--2');
+    $this->click('#connect-four-form th:nth-child(2) input[type="submit"]');
     $this->drupalLogin($this->homeUser);
     $this->drupalGet('connect-four');
-    $this->click('#edit-play');
+    $this->click('#connect-four-form th:nth-child(1) input[type="submit"]');
     $this->drupalLogin($this->awayUser);
     $this->drupalGet('connect-four');
-    $this->click('#edit-play--2');
+    $this->click('#connect-four-form th:nth-child(2) input[type="submit"]');
     $this->drupalLogin($this->homeUser);
     $this->drupalGet('connect-four');
-    $this->click('#edit-play');
+    $this->click('#connect-four-form th:nth-child(1) input[type="submit"]');
     $this->drupalLogin($this->awayUser);
     $this->drupalGet('connect-four');
-    $this->click('#edit-play--2');
+    $this->click('#connect-four-form th:nth-child(2) input[type="submit"]');
     $this->drupalLogin($this->homeUser);
     $this->drupalGet('connect-four');
-    $this->click('#edit-play');
+    $this->click('#connect-four-form th:nth-child(1) input[type="submit"]');
     $this->assertSession()->elementTextContains('css', '#connect-four-form', 'winner');
     $this->assertSession()->elementTextContains('css', '#connect-four-form', 'home');
   }

@@ -5,6 +5,7 @@ namespace Drupal\connect_four;
 use Drupal\connect_four\Entity\Game;
 use Drupal\connect_four\Entity\GameEntity;
 use Drupal\connect_four\Entity\Move;
+use Drupal\connect_four\Exception\ConnectFourException;
 use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Session\AccountInterface;
@@ -208,6 +209,9 @@ class ConnectFourService implements ConnectFourServiceInterface {
     ]);
     $move->save();
     $movesInLine = $this->getMaximumMovesInLine($move);
+    if(is_null($movesInLine)){
+      throw new ConnectFourException('The getMaximumMovesInLine did not retur anything');
+    }
     if(count($movesInLine) == Game::CONSECUTIVE){
       $this->declareWinner($game, $account);
     }

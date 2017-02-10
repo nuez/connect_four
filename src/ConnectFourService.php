@@ -10,7 +10,6 @@ use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Entity\EntityTypeManager;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxy;
-use Drupal\user\Entity\User;
 
 /**
  * Class ConnectFourService.
@@ -40,23 +39,6 @@ class ConnectFourService implements ConnectFourServiceInterface {
   private $adjacentMoves;
 
   /**
-   * An array of all possible directions to check (so excluding 'above')
-   *
-   * @return Position[]
-   */
-  protected function getDirections() {
-    return [
-      new Coordinates(1, 1),
-      new Coordinates(1, 0),
-      new Coordinates(1, -1),
-      new Coordinates(0, -1),
-      new Coordinates(-1, -1),
-      new Coordinates(-1, 0),
-      new Coordinates(-1, 1)
-    ];
-  }
-
-  /**
    * Constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManager $entity_type_manager
@@ -70,52 +52,20 @@ class ConnectFourService implements ConnectFourServiceInterface {
   }
 
   /**
-   * Iterates over all possible adjacent moves in all possible directions.
+   * An array of all possible directions to check (so excluding 'above')
    *
-   * Valid adjacent moves are placed in $this->adjacentMoves.
-   * Together with the played Move they
-   *
-   * @param \Drupal\connect_four\Entity\Move $playedMove
-   *
-   * @return Move[]
+   * @return Coordinates[]
    */
-  public function getMaximumMovesInLine(Move $playedMove) {
-
-    $x = $playedMove->getX();
-    $y = $playedMove->getY();
-    $game = $playedMove->getGame();
-    $adjacentMoves = [];
-
-    foreach ($this->getDirections() as $direction) {
-
-      /** @var Coordinates $direction */
-      $adjacentX = $x + $direction->getX();
-      $adjacentY = $y + $direction->getY();
-      $adjacentMove = $this->getMoveByCoordinates($game, new Coordinates($adjacentX, $adjacentY));
-
-      /*
-       * Check if there is a disc of the same colour in any of the directions
-       * and if so, follow that direction AND the opposite direction.
-       */
-      if ($adjacentMove && $adjacentMove->getOwnerId() == $playedMove->getOwnerId()) {
-
-        $this->adjacentMoves = [$adjacentMove];
-
-        $this->iterateMoves($adjacentMove, $direction);
-
-        $oppositeDirection = new Coordinates($direction->getX() * -1, $direction->getY() * -1);
-        $oppositeCoordinates = new Coordinates($playedMove->getX() + $oppositeDirection->getX(), $playedMove->getY() + $oppositeDirection->getY());
-        $oppositeMove = $this->getMoveByCoordinates($game, $oppositeCoordinates);
-        if ($oppositeMove && $oppositeMove->getOwnerId() == $oppositeMove->getOwnerId()) {
-          $this->adjacentMoves[] = $oppositeMove;
-          $this->iterateMoves($oppositeMove, $oppositeDirection);
-        }
-
-        $adjacentMoves = $this->adjacentMoves > $adjacentMoves ? $this->adjacentMoves : $adjacentMoves;
-      }
-    }
-    $totalMoves = array_merge($adjacentMoves, [$playedMove]);
-    return $totalMoves;
+  protected function getRelativeCoordinates() {
+    return [
+      new Coordinates(1, 1),
+      new Coordinates(1, 0),
+      new Coordinates(1, -1),
+      new Coordinates(0, -1),
+      new Coordinates(-1, -1),
+      new Coordinates(-1, 0),
+      new Coordinates(-1, 1)
+    ];
   }
 
   /**
@@ -123,19 +73,66 @@ class ConnectFourService implements ConnectFourServiceInterface {
    *
    * @param \Drupal\connect_four\Entity\Game $game
    * @param \Drupal\connect_four\Coordinates $direction
+   * @param \Drupal\Core\Session\AccountInterface Optional filter by $owner
    *
-   * @return \Drupal\connect_four\Entity\Move|boolean
+   * @return bool|\Drupal\connect_four\Entity\Move Returns a Move object or False.
    */
-  public function getMoveByCoordinates(Game $game, Coordinates $direction) {
+  public function getMoveByCoordinates(Game $game, Coordinates $direction, AccountInterface $owner = NULL) {
     $moves = $game->getMoves();
     foreach ($moves as $move) {
+      /** @var Move $move */
       $x = $move->getX();
       $y = $move->getY();
       if ($x == $direction->getX() && $y == $direction->getY()) {
-        return $move;
+        if (!$owner) {
+          return $move;
+        }
+        else {
+          if ($owner->id() == $move->getOwnerId()) {
+            return $move;
+          }
+        }
       }
     }
     return FALSE;
+  }
+
+
+  /**
+   * Returns the biggest array of moves in a single line.
+   *
+   * @param \Drupal\connect_four\Entity\Move $playedMove
+   * @return \Drupal\connect_four\Entity\Move[]
+   */
+  public function getMaximumMovesInline(Move $playedMove) {
+    $total = [];
+    foreach ($this->getRelativeCoordinates() as $relativeCoordinates) {
+      $this->adjacentMoves = [$playedMove];
+      $this->countMovesInDirection($playedMove, $relativeCoordinates);
+      if (count($this->adjacentMoves) > 1) {
+        $oppositeCoordinates = new Coordinates($relativeCoordinates->getX() * -1, $relativeCoordinates->getY() * -1);
+        $this->countMovesInDirection($playedMove, $oppositeCoordinates);
+      }
+      if (count($this->adjacentMoves) > count($total)) {
+        $total = $this->adjacentMoves;
+      }
+    }
+    return $total;
+  }
+
+  /**
+   * Count the moves in a certain direction by adding them to ::adjacentMoves
+   *
+   * @param \Drupal\connect_four\Entity\Move $move
+   * @param \Drupal\connect_four\Coordinates $relativeCoordinates
+   */
+  private function countMovesInDirection(Move $move, Coordinates $relativeCoordinates) {
+    $coordinatesToCheck = new Coordinates($move->getX() + $relativeCoordinates->getX(), $move->getY() + $relativeCoordinates->getY());
+    $moveToCheck = $this->getMoveByCoordinates($move->getGame(), $coordinatesToCheck, $move->getOwner());
+    if ($moveToCheck) {
+      $this->adjacentMoves[] = $moveToCheck;
+      $this->countMovesInDirection($moveToCheck, $relativeCoordinates);
+    }
   }
 
   /**
@@ -169,7 +166,7 @@ class ConnectFourService implements ConnectFourServiceInterface {
    */
   public function canPlayMove(Game $game, $x, AccountInterface $account) {
     // Grant access to home user if total moves is uneven.
-    if(!$game->hasFinished()) {
+    if (!$game->hasFinished()) {
       if ($account->id() == $game->getHomeUser()->id()) {
         if (count($game->getMoves()) % 2 == 0) {
           if (count($game->getMovesByX($x)) < Game::HEIGHT) {
@@ -209,10 +206,10 @@ class ConnectFourService implements ConnectFourServiceInterface {
     ]);
     $move->save();
     $movesInLine = $this->getMaximumMovesInLine($move);
-    if(is_null($movesInLine)){
+    if (is_null($movesInLine)) {
       throw new ConnectFourException('The getMaximumMovesInLine did not retur anything');
     }
-    if(count($movesInLine) == Game::CONSECUTIVE){
+    if (count($movesInLine) == Game::CONSECUTIVE) {
       $this->declareWinner($game, $account);
     }
     return $move;
@@ -224,7 +221,7 @@ class ConnectFourService implements ConnectFourServiceInterface {
    * @param \Drupal\connect_four\Entity\Game $game
    * @param \Drupal\Core\Session\AccountInterface $account
    */
-  public function declareWinner(Game $game, AccountInterface $account){
+  public function declareWinner(Game $game, AccountInterface $account) {
     $game->set('winner', $account->id());
     $game->set('game_status', GAME::FINISHED);
     $game->save();
@@ -232,25 +229,5 @@ class ConnectFourService implements ConnectFourServiceInterface {
     return $game;
   }
 
-  /**
-   * See if there are subsequent discs in a certain direction.
-   *
-   * @param \Drupal\connect_four\Entity\Move $move
-   * @param \Drupal\connect_four\Coordinates $direction
-   */
-  private function iterateMoves(Move $move, Coordinates $direction) {
 
-    $adjacentMove = $this->getMoveByCoordinates(
-      $move->getGame(),
-      new Coordinates(
-        $move->getX() + $direction->getX(),
-        $move->getY() + $direction->getY()
-      )
-    );
-
-    if ($adjacentMove && $adjacentMove->getOwnerId() == $move->getOwnerId()) {
-      $this->adjacentMoves[] = $adjacentMove;
-      $this->iterateMoves($adjacentMove, $direction);
-    }
-  }
 }

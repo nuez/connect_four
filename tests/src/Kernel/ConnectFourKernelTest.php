@@ -89,7 +89,7 @@ class ConnectFourKernelTest extends KernelTestBase {
 
     $this->connectFourService->playMove($game, 0, $homeUser);
 
-    $this->assertTrue($game->getWinner() == $homeUser, 'The home user is winner');
+    $this->assertTrue($game->getWinner()->id() == $homeUser->id(), 'The home user is winner');
   }
 
   /**
@@ -128,7 +128,7 @@ class ConnectFourKernelTest extends KernelTestBase {
 
     $this->connectFourService->playMove($game, 1, $awayUser);
 
-    $this->assertTrue($game->getWinner() == $awayUser, 'The away user is winner');
+    $this->assertTrue($game->getWinner()->id() == $awayUser->id(), 'The away user is winner');
   }
 
 }

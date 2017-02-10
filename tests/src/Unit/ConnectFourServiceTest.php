@@ -11,9 +11,9 @@ use Drupal\connect_four\Entity\Game;
 use Drupal\connect_four\Entity\Move;
 use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Tests\UnitTestCase;
-use Drupal\user\Entity\User;
 use Prophecy\Prophecy\ProphecyInterface;
 
 /**
@@ -58,118 +58,47 @@ class ConnectFourServiceTest extends UnitTestCase {
   }
 
   /**
-   * Tests if it's the users' turn to play and if the column hasn't been filled yet.
-   *
-   * @covers ::canPlayMove
-   */
-  public function testTurnUsers() {
-    // The Home Player should only be able to play when the amount of
-    // played moves is even.
-    /** @var User|ProphecyInterface $homeUser */
-    $homeUser = $this->prophesize(User::class);
-    $homeUser->id()->willReturn(1);
-
-    /** @var User|ProphecyInterface $awayUser */
-    $awayUser = $this->prophesize(User::class);
-    $awayUser->id()->willReturn(2);
-
-    /** @var Game|ProphecyInterface $game */
-    $game = $this->prophesize(Game::class);
-    $game->getHomeUser()->willReturn($homeUser);
-    $game->getAwayUser()->willReturn($awayUser);
-    $game->hasFinished()->willReturn(FALSE);
-
-    $game->getMoves()->willReturn([
-      $this->prophesize(Move::class)->reveal(),
-      $this->prophesize(Move::class)->reveal(),
-    ]);
-
-    // The first Column will be half filled and will still have room to play.
-    $game->getMovesByX(0)->willReturn([
-      $this->prophesize(Move::class)->reveal(),
-      $this->prophesize(Move::class)->reveal(),
-    ]);
-
-    // The second Column Will be filled and will not have room left to play.
-    $game->getMovesByX(1)->willReturn([
-      $this->prophesize(Move::class)->reveal(),
-      $this->prophesize(Move::class)->reveal(),
-      $this->prophesize(Move::class)->reveal(),
-      $this->prophesize(Move::class)->reveal(),
-      $this->prophesize(Move::class)->reveal(),
-      $this->prophesize(Move::class)->reveal(),
-    ]);
-
-    // The third column will be filled apart from one.
-    $game->getMovesByX(2)->willReturn([
-      $this->prophesize(Move::class)->reveal(),
-      $this->prophesize(Move::class)->reveal(),
-      $this->prophesize(Move::class)->reveal(),
-      $this->prophesize(Move::class)->reveal(),
-      $this->prophesize(Move::class)->reveal(),
-    ]);
-
-    // The Home Player can play this move in the first column.
-    $this->assertTrue($this->sut->canPlayMove($game->reveal(), 0, $homeUser->reveal()));
-
-    // The Away player cannot play this move as it isn't his turn.
-    $this->assertFalse($this->sut->canPlayMove($game->reveal(), 0, $awayUser->reveal()));
-
-    // The Home player cannot play this move in the second column as it's full.
-    $this->assertFalse($this->sut->canPlayMove($game->reveal(), 1, $homeUser->reveal()));
-
-    // The Home player can play this move in the second column as it isnt full yet.
-    $this->assertTrue($this->sut->canPlayMove($game->reveal(), 2, $homeUser->reveal()));
-
-    // Test if Away has permission when total moves are uneven.
-    $game->getMoves()->willReturn([
-      $this->prophesize(Move::class)->reveal(),
-      $this->prophesize(Move::class)->reveal(),
-      $this->prophesize(Move::class)->reveal(),
-    ]);
-
-    // The Home player cannot play this move in the second column as it's full.
-    $this->assertFalse($this->sut->canPlayMove($game->reveal(), 0, $homeUser->reveal()));
-
-    // The Home player can play this move in the second column as it isnt full yet.
-    $this->assertTrue($this->sut->canPlayMove($game->reveal(), 0, $awayUser->reveal()));
-
-  }
-
-
-  /**
-   * Tests getting the maximum amount of moves in a single line.
+   * Tests the maximum amount of moves in a single line.
    *
    * @covers ::getMaximumMovesInline
    *
    * @dataProvider movesDataProvider
    */
-  public function testGetMaximumMovesInLine($movesData, $max) {
-    $moves = [];
+  public function testGetMaximumMovesInline($movesData, $max) {
+
+    /** @var Move|ProphecyInterface $lastMove */
+    $lastMove = $this->prophesize(Move::class);
+    $lastMove->getX()->willReturn(end($movesData)['x']);
+    $lastMove->getY()->willReturn(end($movesData)['y']);
+
+    /** @var AccountInterface|ProphecyInterface $lastMoveOwner */
+    $lastMoveOwner = $this->prophesize(AccountInterface::class);
+    $lastMoveOwner->id()->willReturn(end($movesData)['user_id']);
+
+    $lastMove->getOwner()->willReturn($lastMoveOwner->reveal());
+    $lastMove->getOwnerId()->willReturn(end($movesData)['user_id']);
 
     /** @var Game|ProphecyInterface $game */
     $game = $this->prophesize(Game::class);
-    $game->id()->willReturn(1);
+    $lastMove->getGame()->willReturn($game->reveal());
+
 
     foreach ($movesData as $data) {
-
-      /** @var User|ProphecyInterface $owner */
-      $owner = $this->prophesize(User::class);
-      $owner->id()->willReturn($data['user_id']);
-
       /** @var Move|ProphecyInterface $move */
       $move = $this->prophesize(Move::class);
-
-      // Get the X and Y coordinates from the dataprovider.
       $move->getX()->willReturn($data['x']);
       $move->getY()->willReturn($data['y']);
       $move->getOwnerId()->willReturn($data['user_id']);
-
-      $moves[] = $move->reveal();
-      $move->getGame()->willReturn($game->reveal());
+      $move->getGame()->willReturn($game);
+      $owner = $this->prophesize(AccountInterface::class);
+      $owner->id()->willReturn($data['user_id']);
+      $move->getOwner()->willReturn($owner->reveal());
+      $move->getOwner()->willReturn($owner);
+      $movesCollection[] = $move->reveal();
     }
-    $game->getMoves()->willReturn($moves);
-    $this->assertEquals($max, count($this->sut->getMaximumMovesInLine(end($moves))));
+
+    $game->getMoves()->willReturn($movesCollection);
+    $this->assertEquals($max, count($this->sut->getMaximumMovesInline($lastMove->reveal())));
   }
 
   /**

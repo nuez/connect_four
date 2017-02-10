@@ -59,6 +59,7 @@ class ConnectFourKernelTest extends KernelTestBase {
    * Test that the Home user wins.
    */
   public function testHomeUserWins() {
+
     $homeUser = User::create([
       'name' => 'home',
       'email' => 'home@home.home',

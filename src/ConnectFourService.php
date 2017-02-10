@@ -97,7 +97,6 @@ class ConnectFourService implements ConnectFourServiceInterface {
     return FALSE;
   }
 
-
   /**
    * Returns the biggest array of moves in a single line.
    *
@@ -192,8 +191,8 @@ class ConnectFourService implements ConnectFourServiceInterface {
    * @param \Drupal\connect_four\Entity\Game $game
    * @param $x
    * @param \Drupal\Core\Session\AccountInterface $account
-   *
-   * @return Move
+   * @return \Drupal\connect_four\Entity\Move
+   * @throws \Drupal\connect_four\Exception\ConnectFourException
    */
   public function playMove(Game $game, $x, AccountInterface $account) {
     $y = count($game->getMovesByX($x));
@@ -220,6 +219,7 @@ class ConnectFourService implements ConnectFourServiceInterface {
    *
    * @param \Drupal\connect_four\Entity\Game $game
    * @param \Drupal\Core\Session\AccountInterface $account
+   * @return \Drupal\connect_four\Entity\Game
    */
   public function declareWinner(Game $game, AccountInterface $account) {
     $game->set('winner', $account->id());

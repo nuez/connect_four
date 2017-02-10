@@ -66,6 +66,7 @@ class ConnectFourServiceTest extends UnitTestCase {
    */
   public function testGetMaximumMovesInline($movesData, $max) {
 
+
     /** @var Move|ProphecyInterface $lastMove */
     $lastMove = $this->prophesize(Move::class);
     $lastMove->getX()->willReturn(end($movesData)['x']);

@@ -52,6 +52,16 @@ interface ConnectFourServiceInterface {
   public function canPlayMove(Game $game, $x, AccountInterface $account);
 
   /**
+   * Checks if it's the user's turn to play.
+   *
+   * @param \Drupal\connect_four\Entity\Game $game
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *
+   * @return bool True if it's user's turn.
+   */
+  public function isTurn(Game $game, AccountInterface $account);
+
+  /**
    * @param \Drupal\connect_four\Entity\Game $game
    * @param $x
    * @param \Drupal\Core\Session\AccountInterface $account

@@ -1,20 +1,28 @@
-<table class="connect-four-table">
-  <thead>
-  <tr>
-    {% for key, header in element.headers  if key|first != '#' %}
-      <th>
-        {{ header }}
-      </th>
-    {% endfor %}
-  </tr>
-  </thead>
+<div id="connect-four-wrapper">
 
-  {% for key, row in element.rows  if key|first != '#'%}
+  {% if element['#isTurn'] %}
+  <h3>{{ "It's your turn!"| t }}</h3>
+  {% else %}
+    <h3>{{ "Wait for your opponent..."| t }}</h3>
+  {% endif %}
+  <table class="connect-four-table" id="connect-four-table">
+    <thead>
     <tr>
-      {% for key, column in row.columns if key|first != '#' %}
-        <td class="{{  column['#class']}}"></td>
+      {% for key, header in element.headers  if key|first != '#' %}
+        <th>
+          {{ header }}
+        </th>
       {% endfor %}
     </tr>
-  {% endfor %}
-</table>
+    </thead>
+
+    {% for key, row in element.rows  if key|first != '#' %}
+      <tr>
+        {% for key, column in row.columns if key|first != '#' %}
+          <td class="{{ column['#class'] }}"></td>
+        {% endfor %}
+      </tr>
+    {% endfor %}
+  </table>
+</div>
 

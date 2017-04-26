@@ -5,3 +5,9 @@ connect_four.form:
     _form: '\Drupal\connect_four\Form\ConnectFourForm'
   requirements:
     _permission: 'view published game entities'
+connect_four.polling:
+  path: 'connect-four-polling/{status}'
+  defaults:
+    _controller: '\Drupal\connect_four\Controller\ConnectFourController::polling'
+  requirements:
+    _custom_access: '\Drupal\connect_four\Controller\ConnectFourController::access'

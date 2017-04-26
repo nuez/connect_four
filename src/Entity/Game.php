@@ -199,7 +199,7 @@ class Game extends ContentEntityBase implements GameInterface {
    *
    * @return bool
    */
-  public function hasFinished() {
+  public function isFinished() {
     return $this->get('game_status')->getValue()[0]['value'] == GAME::FINISHED ? TRUE : FALSE;
   }
 

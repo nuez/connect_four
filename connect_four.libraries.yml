@@ -3,3 +3,12 @@ connect_four_styles:
   css:
     theme:
       css/connect_four.css: {}
+
+connect_four_polling:
+  version: 1.x
+  js:
+    js/connect_four_polling.js: {}
+  dependencies:
+    - core/jquery
+    - core/drupal.ajax
+    - core/drupalSettings

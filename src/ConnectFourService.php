@@ -52,23 +52,6 @@ class ConnectFourService implements ConnectFourServiceInterface {
   }
 
   /**
-   * An array of all possible directions to check (so excluding 'above')
-   *
-   * @return Coordinates[]
-   */
-  protected function getRelativeCoordinates() {
-    return [
-      new Coordinates(1, 1),
-      new Coordinates(1, 0),
-      new Coordinates(1, -1),
-      new Coordinates(0, -1),
-      new Coordinates(-1, -1),
-      new Coordinates(-1, 0),
-      new Coordinates(-1, 1)
-    ];
-  }
-
-  /**
    * Get Move by Coordinates.
    *
    * @param \Drupal\connect_four\Entity\Game $game
@@ -120,21 +103,6 @@ class ConnectFourService implements ConnectFourServiceInterface {
   }
 
   /**
-   * Count the moves in a certain direction by adding them to ::adjacentMoves
-   *
-   * @param \Drupal\connect_four\Entity\Move $move
-   * @param \Drupal\connect_four\Coordinates $relativeCoordinates
-   */
-  private function countMovesInDirection(Move $move, Coordinates $relativeCoordinates) {
-    $coordinatesToCheck = new Coordinates($move->getX() + $relativeCoordinates->getX(), $move->getY() + $relativeCoordinates->getY());
-    $moveToCheck = $this->getMoveByCoordinates($move->getGame(), $coordinatesToCheck, $move->getOwner());
-    if ($moveToCheck) {
-      $this->adjacentMoves[] = $moveToCheck;
-      $this->countMovesInDirection($moveToCheck, $relativeCoordinates);
-    }
-  }
-
-  /**
    * Get the last game available.
    *
    * {@inheritdoc}
@@ -165,21 +133,9 @@ class ConnectFourService implements ConnectFourServiceInterface {
    */
   public function canPlayMove(Game $game, $x, AccountInterface $account) {
     // Grant access to home user if total moves is uneven.
-    if (!$game->hasFinished()) {
-      if ($account->id() == $game->getHomeUser()->id()) {
-        if (count($game->getMoves()) % 2 == 0) {
-          if (count($game->getMovesByX($x)) < Game::HEIGHT) {
-            return TRUE;
-          }
-        }
-      }
-      // Grant access to away user if total moves is uneven.
-      elseif ($account->id() == $game->getAwayUser()->id()) {
-        if (count($game->getMoves()) % 2 != 0) {
-          if (count($game->getMovesByX($x)) < Game::HEIGHT) {
-            return TRUE;
-          }
-        }
+    if (!$game->isFinished()) {
+      if ($this->isTurn($game, $account) && count($game->getMovesByX($x)) < Game::HEIGHT) {
+        return TRUE;
       }
     }
     return FALSE;
@@ -194,7 +150,8 @@ class ConnectFourService implements ConnectFourServiceInterface {
    * @return \Drupal\connect_four\Entity\Move
    * @throws \Drupal\connect_four\Exception\ConnectFourException
    */
-  public function playMove(Game $game, $x, AccountInterface $account) {
+  public
+  function playMove(Game $game, $x, AccountInterface $account) {
     $y = count($game->getMovesByX($x));
     $move = Move::create([
       'x' => $x,
@@ -221,7 +178,8 @@ class ConnectFourService implements ConnectFourServiceInterface {
    * @param \Drupal\Core\Session\AccountInterface $account
    * @return \Drupal\connect_four\Entity\Game
    */
-  public function declareWinner(Game $game, AccountInterface $account) {
+  public
+  function declareWinner(Game $game, AccountInterface $account) {
     $game->set('winner', $account->id());
     $game->set('game_status', GAME::FINISHED);
     $game->save();
@@ -229,5 +187,54 @@ class ConnectFourService implements ConnectFourServiceInterface {
     return $game;
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function isTurn(Game $game, AccountInterface $account) {
+    if ($account->id() == $game->getHomeUser()->id()) {
+      if (count($game->getMoves()) % 2 == 0) {
+        return TRUE;
+      }
+    }
+    elseif ($account->id() == $game->getAwayUser()->id()) {
+      if (count($game->getMoves()) % 2 != 0) {
+        return TRUE;
+      }
+    }
+    return FALSE;
+  }
 
+  /**
+   * An array of all possible directions to check (so excluding 'above')
+   *
+   * @return Coordinates[]
+   */
+  protected
+  function getRelativeCoordinates() {
+    return [
+      new Coordinates(1, 1),
+      new Coordinates(1, 0),
+      new Coordinates(1, -1),
+      new Coordinates(0, -1),
+      new Coordinates(-1, -1),
+      new Coordinates(-1, 0),
+      new Coordinates(-1, 1)
+    ];
+  }
+
+  /**
+   * Count the moves in a certain direction by adding them to ::adjacentMoves
+   *
+   * @param \Drupal\connect_four\Entity\Move $move
+   * @param \Drupal\connect_four\Coordinates $relativeCoordinates
+   */
+  private
+  function countMovesInDirection(Move $move, Coordinates $relativeCoordinates) {
+    $coordinatesToCheck = new Coordinates($move->getX() + $relativeCoordinates->getX(), $move->getY() + $relativeCoordinates->getY());
+    $moveToCheck = $this->getMoveByCoordinates($move->getGame(), $coordinatesToCheck, $move->getOwner());
+    if ($moveToCheck) {
+      $this->adjacentMoves[] = $moveToCheck;
+      $this->countMovesInDirection($moveToCheck, $relativeCoordinates);
+    }
+  }
 }

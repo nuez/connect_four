@@ -26,6 +26,7 @@ class ConnectFourFunctionalTest extends BrowserTestBase  {
     'field',
   ];
 
+
   /**
    * @var User
    */
@@ -55,7 +56,8 @@ class ConnectFourFunctionalTest extends BrowserTestBase  {
       'status' => TRUE,
       'created' => REQUEST_TIME,
       'updated' => REQUEST_TIME,
-    ])->save();
+    ]);
+    $this->game->save();
   }
 
   /**
@@ -86,8 +88,9 @@ class ConnectFourFunctionalTest extends BrowserTestBase  {
     $this->drupalLogin($this->homeUser);
     $this->drupalGet('connect-four');
     $this->assertSession()->buttonExists('Play');
-    $this->assertSession()->elementsCount('css', '#connect-four-form input[type="submit"]', 7);
+    $this->assertSession()->elementsCount('css', 'input[type="submit"]', 7);
     $this->drupalLogin($this->awayUser);
+    $this->drupalGet('connect-four');
     $this->assertSession()->buttonNotExists('Play');
   }
 

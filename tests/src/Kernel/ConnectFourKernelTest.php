@@ -51,6 +51,9 @@ class ConnectFourKernelTest extends KernelTestBase {
       ->get('connect_four.service');
   }
 
+  /**
+   * Mark a test as incomplete.
+   */
   public function testIncompleteKernelTest() {
     $this->markTestIncomplete('This test hasnt been implemented yet');
   }

@@ -107,7 +107,7 @@ interface GameInterface extends ContentEntityInterface, EntityChangedInterface, 
   /**
    * @return bool
    */
-  public function hasFinished();
+  public function isFinished();
 
   /**
    * @return User;

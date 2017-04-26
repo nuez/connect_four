@@ -1,24 +1,32 @@
 .empty,
 .home,
-.away{
-    height:30px;
-    font-size:10px;
-    text-align:center;
-    width:calc(100% / 7);
+.away {
+    height: 30px;
+    font-size: 10px;
+    text-align: center;
+    width: calc(100% / 7);
+}
+.connect-four-table{
+    width:100%;
+}
+.connect-four-table td {
+    border: 1px solid black;
 }
 
-.home{
-    background:red;
-}
-.home:after{
-    color:white;
-    content:'home';
-}
-.away{
-    background:yellow;
+.home {
+    background: red;
 }
 
-.away:after{
-    color:black;
-    content:'away';
+.home:after {
+    color: white;
+    content: 'home';
+}
+
+.away {
+    background: yellow;
+}
+
+.away:after {
+    color: black;
+    content: 'away';
 }

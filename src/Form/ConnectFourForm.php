@@ -33,12 +33,20 @@ class ConnectFourForm extends FormBase implements FormInterface {
   protected $game;
 
   /**
+   * @var bool
+   */
+  protected $isTurn;
+
+  /**
    * ConnectFourForm constructor.
    * @param \Drupal\connect_four\ConnectFourService $connect_four_service
+   * @param \Drupal\Core\Session\AccountProxy $account_proxy
    */
   public function __construct(ConnectFourService $connect_four_service, AccountProxy $account_proxy) {
     $this->connectFourService = $connect_four_service;
     $this->accountProxy = $account_proxy;
+    $this->game = $this->connectFourService->getLastGame();
+    $this->isTurn = $this->connectFourService->isTurn($this->game, $this->accountProxy->getAccount());
   }
 
   /**
@@ -74,31 +82,36 @@ class ConnectFourForm extends FormBase implements FormInterface {
    *   The form structure.
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    /** @var Game $game */
-
-    $this->game = $this->connectFourService->getLastGame();
-
-
     if (!$this->game) {
       return [
         '#type' => '#markup',
         '#markup' => $this->t('Please create a game first.'),
       ];
     }
-    if($this->game->hasFinished()){
+    if ($this->game->isFinished()) {
       return [
         '#type' => '#markup',
-        '#markup' => t('And the winner is: @winner', ['@winner' => $this->game->getWinner()->getDisplayName()])
+        '#markup' => t('And the winner is: @winner', [
+          '@winner' => $this->game->getWinner()
+            ->getDisplayName()
+        ])
       ];
     }
     $board = [
       '#theme' => 'connect_four',
+      '#attributes' => ['id' => 'connect-four-table'],
       '#attached' => [
         'library' => [
           'connect_four/connect_four_styles',
+          'connect_four/connect_four_polling'
+        ],
+        'drupalSettings' => [
+          'turn' => $this->isTurn,
         ]
       ],
+      '#isTurn' =>  $this->isTurn,
     ];
+
     for ($x = 0; $x < Game::WIDTH; $x++) {
       if ($this->connectFourService->canPlayMove($this->game, $x, $this->accountProxy->getAccount())) {
         $board['headers'][$x]['play'] = [
@@ -107,26 +120,28 @@ class ConnectFourForm extends FormBase implements FormInterface {
           '#column' => $x,
           '#name' => $x
         ];
-      } else{
+      }
+      else {
         $board['headers'][$x]['play'] = [
           '#type' => 'markup',
           '#markup' => '',
         ];
       }
-      for ($y = GAME::HEIGHT -1; $y >= 0; $y--) {
+      for ($y = GAME::HEIGHT - 1; $y >= 0; $y--) {
         $coordinates = new Coordinates($x, $y);
         $move = $this->connectFourService->getMoveByCoordinates($this->game, $coordinates);
-         if ($move) {
+        if ($move) {
           $board['rows'][$y]['columns'][$x]['#class'] = $move->isHome() ? 'home' : 'away';
-        } else{
-           $board['rows'][$y]['columns'][$x]['#class'] = 'empty';
-         }
+        }
+        else {
+          $board['rows'][$y]['columns'][$x]['#class'] = 'empty';
+        }
       }
     }
     $form['board'] = $board;
+
     return $form;
   }
-
 
   /**
    * Form validation handler.
@@ -149,7 +164,9 @@ class ConnectFourForm extends FormBase implements FormInterface {
    *   The current state of the form.
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $column = $form_state->getTriggeringElement()['#column'];
-    $this->connectFourService->playMove($this->game, $column, $this->accountProxy->getAccount());
+    $triggeringElement = $form_state->getTriggeringElement();
+    if (isset($triggeringElement['#column'])) {
+      $this->connectFourService->playMove($this->game, $triggeringElement['#column'], $this->accountProxy->getAccount());
+    }
   }
 }

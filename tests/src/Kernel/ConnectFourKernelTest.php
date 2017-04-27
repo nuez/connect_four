@@ -8,10 +8,18 @@ namespace Drupal\Tests\connect_four\Kernel;
 
 use Drupal\connect_four\ConnectFourService;
 use Drupal\connect_four\Entity\Game;
+use Drupal\connect_four\Entity\Move;
 use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Serialization\Yaml;
 use Drupal\KernelTests\KernelTestBase;
 use Drupal\user\Entity\User;
 
+
+/**
+ * @coversDefaultClass \Drupal\connect_four\ConnectFourService
+ *
+ * @group connect_four
+ */
 class ConnectFourKernelTest extends KernelTestBase {
 
   /**
@@ -36,6 +44,22 @@ class ConnectFourKernelTest extends KernelTestBase {
   protected $connectFourService;
 
   /**
+   * @var User
+   */
+  protected $homeUser;
+
+  /**
+   * @var User
+   */
+  protected $awayUser;
+
+  /**
+   * @var Game
+   */
+  protected $game;
+
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp() {
@@ -47,14 +71,33 @@ class ConnectFourKernelTest extends KernelTestBase {
 
     $this->entityTypeManager = \Drupal::getContainer()
       ->get('entity_type.manager');
+
     $this->connectFourService = \Drupal::getContainer()
       ->get('connect_four.service');
+
+    $this->homeUser = User::create([
+      'name' => 'home',
+      'email' => 'home@home.home',
+    ]);
+    $this->homeUser->save();
+    $this->awayUser = User::create([
+      'name' => 'away',
+      'email' => 'away@away.away',
+    ]);
+    $this->awayUser->save();
+    $this->game = Game::create([
+      'home' => $this->homeUser,
+      'away' => $this->awayUser,
+      'created' => REQUEST_TIME,
+    ]);
+    $this->game->save();
+
   }
 
   /**
-   * Mark a test as incomplete.
+   * Test the result when the size of the board changes.
    */
-  public function testIncompleteKernelTest() {
+  public function testDifferentSizesForGame() {
     $this->markTestIncomplete('This test hasnt been implemented yet');
   }
 
@@ -62,77 +105,66 @@ class ConnectFourKernelTest extends KernelTestBase {
    * Test that the Home user wins.
    */
   public function testHomeUserWins() {
-
-    $homeUser = User::create([
-      'name' => 'home',
-      'email' => 'home@home.home',
-    ]);
-    $homeUser->save();
-    $awayUser = User::create([
-      'name' => 'away',
-      'email' => 'away@away.away',
-    ]);
-    $awayUser->save();
-    $game = Game::create([
-      'home' => $homeUser,
-      'away' => $awayUser,
-      'created' => REQUEST_TIME,
-    ]);
-    $game->save();
-
-    $this->connectFourService->playMove($game, 0, $homeUser);
-
-    $this->connectFourService->playMove($game, 1, $awayUser);
-
-    $this->connectFourService->playMove($game, 0, $homeUser);
-
-    $this->connectFourService->playMove($game, 1, $awayUser);
-    $this->connectFourService->playMove($game, 0, $homeUser);
-
-    $this->connectFourService->playMove($game, 1, $awayUser);
-
-    $this->connectFourService->playMove($game, 0, $homeUser);
-
-    $this->assertTrue($game->getWinner()->id() == $homeUser->id(), 'The home user is winner');
+    $this->connectFourService->playMove($this->game, 0, $this->homeUser);
+    $this->connectFourService->playMove($this->game, 1, $this->awayUser);
+    $this->connectFourService->playMove($this->game, 0, $this->homeUser);
+    $this->connectFourService->playMove($this->game, 1, $this->awayUser);
+    $this->connectFourService->playMove($this->game, 0, $this->homeUser);
+    $this->connectFourService->playMove($this->game, 1, $this->awayUser);
+    $this->connectFourService->playMove($this->game, 0, $this->homeUser);
+    $this->assertTrue($this->game->getWinner()->id() == $this->homeUser->id(), 'The home user is winner');
   }
 
   /**
    * Test that the Home user wins.
    */
   public function testAwayUserWins() {
-    $homeUser = User::create([
-      'name' => 'home',
-      'email' => 'home@home.home',
-    ]);
-    $homeUser->save();
-    $awayUser = User::create([
-      'name' => 'away',
-      'email' => 'away@away.away',
-    ]);
-    $awayUser->save();
-    $game = Game::create([
-      'home' => $homeUser,
-      'away' => $awayUser,
-      'created' => REQUEST_TIME,
-    ]);
-    $game->save();
+    $this->connectFourService->playMove($this->game, 0, $this->homeUser);
+    $this->connectFourService->playMove($this->game, 1, $this->awayUser);
+    $this->connectFourService->playMove($this->game, 3, $this->homeUser);
+    $this->connectFourService->playMove($this->game, 1, $this->awayUser);
+    $this->connectFourService->playMove($this->game, 0, $this->homeUser);
+    $this->connectFourService->playMove($this->game, 1, $this->awayUser);
+    $this->connectFourService->playMove($this->game, 0, $this->homeUser);
+    $this->connectFourService->playMove($this->game, 1, $this->awayUser);
+    $this->assertTrue($this->game->getWinner()->id() == $this->awayUser->id(), 'The away user is winner');
+  }
 
-    $this->connectFourService->playMove($game, 0, $homeUser);
 
-    $this->connectFourService->playMove($game, 1, $awayUser);
+  /**
+   * Tests the maximum amount of moves in a single line.
+   *
+   * @covers ::getMaximumMovesInline
+   *
+   * @dataProvider movesDataProvider
+   */
+  public function testGetMaximumMovesInline($movesData, $max) {
 
-    $this->connectFourService->playMove($game, 3, $homeUser);
+    foreach ($movesData as $data) {
+      $move = Move::create([
+        'x' => $data['x'],
+        'y' => $data['y'],
+        'game' => $this->game->id(),
+        'user_id' => $data['user_id'],
+        'created' => REQUEST_TIME,
+      ]);
+      $move->save();
+      $moves[] = $move;
+    }
 
-    $this->connectFourService->playMove($game, 1, $awayUser);
-    $this->connectFourService->playMove($game, 0, $homeUser);
+    $this->assertEquals($max, count($this->connectFourService->getMaximumMovesInline(end($moves))));
+  }
 
-    $this->connectFourService->playMove($game, 1, $awayUser);
-
-    $this->connectFourService->playMove($game, 0, $homeUser);
-
-    $this->connectFourService->playMove($game, 1, $awayUser);
-
-    $this->assertTrue($game->getWinner()->id() == $awayUser->id(), 'The away user is winner');
+  /**
+   * Dataprovider for ::getMaximumMovesInline.
+   *
+   * Returns different scenarios for moves played and maximum amount of discs
+   * in one line.
+   *
+   * @return array
+   */
+  public function movesDataProvider() {
+    return Yaml::decode(file_get_contents('../movesScenarios.yml'));
   }
 
 }

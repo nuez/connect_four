@@ -64,21 +64,32 @@ class ConnectFourJavascriptTest extends JavascriptTestBase  {
       'updated' => REQUEST_TIME,
     ]);
     $this->game->save();
-
     $this->connectFourService = \Drupal::service('connect_four.service');
-
   }
 
 
   /**
-   * Tests if Polling works.
+   * Tests polling of the opponents move.
    */
-  public function testHomeWins(){
+  public function testPolling(){
     $this->drupalLogin($this->awayUser);
-    $this->connectFourService->playMove($this->game, 0, $this->homeUser);
     $this->drupalGet('connect-four');
-    $this->assertSession()->assertVisibleInViewport('css', '#edit-play');
+
+    // The Away user should not be able to play right away but has to wait
+    // for the Home user to play first. Then the 'play buttons' will appear
+    // automatically through an ajax call.
+    $this->assertSession()->elementNotExists('css','input[type="submit"]');
+    $this->createScreenshot('public://screenshot.jpg');
+
+    // The Home User plays the move (using code). Keep the
+    // Away user logged in and on the same page.
+    $this->connectFourService->playMove($this->game, 0, $this->homeUser);
+
+    // Ajax should pick this move up.
     $this->assertSession()->assertWaitOnAjaxRequest();
+    $this->createScreenshot('public://screenshot_after.jpg');
+    $this->assertSession()->elementExists('css', 'input[type="submit"]');
+
   }
 }
 

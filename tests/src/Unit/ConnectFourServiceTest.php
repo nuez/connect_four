@@ -11,6 +11,7 @@ use Drupal\connect_four\Entity\Game;
 use Drupal\connect_four\Entity\Move;
 use Drupal\Core\Entity\Query\QueryFactory;
 use Drupal\Core\Entity\EntityTypeManager;
+use Drupal\Core\Serialization\Yaml;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxy;
 use Drupal\Tests\UnitTestCase;
@@ -66,7 +67,6 @@ class ConnectFourServiceTest extends UnitTestCase {
    */
   public function testGetMaximumMovesInline($movesData, $max) {
 
-
     /** @var Move|ProphecyInterface $lastMove */
     $lastMove = $this->prophesize(Move::class);
     $lastMove->getX()->willReturn(end($movesData)['x']);
@@ -82,7 +82,6 @@ class ConnectFourServiceTest extends UnitTestCase {
     /** @var Game|ProphecyInterface $game */
     $game = $this->prophesize(Game::class);
     $lastMove->getGame()->willReturn($game->reveal());
-
 
     foreach ($movesData as $data) {
       /** @var Move|ProphecyInterface $move */
@@ -105,195 +104,13 @@ class ConnectFourServiceTest extends UnitTestCase {
   /**
    * Dataprovider for ::getMaximumMovesInline.
    *
+   * Returns different scenarios for moves played and maximum amount of discs
+   * in one line.
+   *
    * @return array
    */
   public function movesDataProvider() {
-
-    /*
-     *  Returns an array with the moves and the expected count of maxmimum
-     *  amount of moves in one line.
-     *
-     *  The last item in 'moves' is considered the last Move, and is the
-     *  one used to check lines.
-     *
-     *  1. 4 in a row vertically.
-     *  2. 4 in a row horizontally.
-     *  3. A diagonal row.
-     *     Assume that the last disc that was played was in the middle X=2,Y=2
-     *     | | | |A|A|B|
-     *     | | | |A|A|B|
-     *     | |A|A|B|A|B|
-     *     |A|A|A|A|A|B|
-     *     |A|B|B|B|A|A|
-     */
-    return [
-      [
-        'moves' => [
-          [
-            'x' => 0,
-            'y' => 1,
-            'user_id' => 1,
-          ],
-          [
-            'x' => 0,
-            'y' => 2,
-            'user_id' => 1,
-          ],
-          [
-            'x' => 0,
-            'y' => 3,
-            'user_id' => 1,
-          ],
-        ],
-        'max' => 3,
-      ],
-      [
-        'moves' => [
-          [
-            'x' => 0,
-            'y' => 1,
-            'user_id' => 1,
-          ],
-          [
-            'x' => 0,
-            'y' => 2,
-            'user_id' => 1,
-          ],
-          [
-            'x' => 0,
-            'y' => 3,
-            'user_id' => 1,
-          ],
-          [
-            'x' => 0,
-            'y' => 4,
-            'user_id' => 1,
-          ],
-        ],
-        'max' => 4,
-      ],
-      [
-        'moves' => [
-          [
-            'x' => 0,
-            'y' => 0,
-            'user_id' => 1,
-          ],
-          [
-            'x' => 1,
-            'y' => 0,
-            'user_id' => 2,
-          ],
-          [
-            'x' => 2,
-            'y' => 0,
-            'user_id' => 2,
-          ],
-          [
-            'x' => 3,
-            'y' => 0,
-            'user_id' => 2,
-          ],
-          [
-            'x' => 4,
-            'y' => 0,
-            'user_id' => 1,
-          ],
-          [
-            'x' => 5,
-            'y' => 0,
-            'user_id' => 1,
-          ],
-          [
-            'x' => 0,
-            'y' => 1,
-            'user_id' => 1,
-          ],
-          [
-            'x' => 1,
-            'y' => 1,
-            'user_id' => 1,
-          ],
-          [
-            'x' => 2,
-            'y' => 1,
-            'user_id' => 1,
-          ],
-          [
-            'x' => 3,
-            'y' => 1,
-            'user_id' => 1,
-          ],
-          [
-            'x' => 4,
-            'y' => 1,
-            'user_id' => 1,
-          ],
-          [
-            'x' => 5,
-            'y' => 1,
-            'user_id' => 2,
-          ],
-          [
-            'x' => 1,
-            'y' => 2,
-            'user_id' => 1,
-          ],
-          [
-            'x' => 3,
-            'y' => 2,
-            'user_id' => 2,
-          ],
-          [
-            'x' => 4,
-            'y' => 2,
-            'user_id' => 1,
-          ],
-          [
-            'x' => 5,
-            'y' => 2,
-            'user_id' => 2,
-          ],
-          [
-            'x' => 3,
-            'y' => 3,
-            'user_id' => 1,
-          ],
-          [
-            'x' => 4,
-            'y' => 3,
-            'user_id' => 1,
-          ],
-          [
-            'x' => 5,
-            'y' => 3,
-            'user_id' => 2,
-          ],
-          [
-            'x' => 3,
-            'y' => 4,
-            'user_id' => 1,
-          ],
-
-          [
-            'x' => 5,
-            'y' => 4,
-            'user_id' => 2,
-          ],
-          [
-            'x' => 4,
-            'y' => 4,
-            'user_id' => 1,
-          ],
-          [
-            'x' => 2,
-            'y' => 2,
-            'user_id' => 1,
-          ],
-        ],
-        'max' => 5,
-      ]
-    ];
+    return Yaml::decode(file_get_contents('../movesScenarios.yml'));
   }
 
 

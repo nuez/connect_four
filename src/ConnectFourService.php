@@ -150,8 +150,7 @@ class ConnectFourService implements ConnectFourServiceInterface {
    * @return \Drupal\connect_four\Entity\Move
    * @throws \Drupal\connect_four\Exception\ConnectFourException
    */
-  public
-  function playMove(Game $game, $x, AccountInterface $account) {
+  public function playMove(Game $game, $x, AccountInterface $account) {
     $y = count($game->getMovesByX($x));
     $move = Move::create([
       'x' => $x,
@@ -163,7 +162,7 @@ class ConnectFourService implements ConnectFourServiceInterface {
     $move->save();
     $movesInLine = $this->getMaximumMovesInLine($move);
     if (is_null($movesInLine)) {
-      throw new ConnectFourException('The getMaximumMovesInLine did not retur anything');
+      throw new ConnectFourException('The getMaximumMovesInLine did not return anything');
     }
     if (count($movesInLine) == Game::CONSECUTIVE) {
       $this->declareWinner($game, $account);

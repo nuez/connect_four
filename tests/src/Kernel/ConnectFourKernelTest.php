@@ -164,7 +164,7 @@ class ConnectFourKernelTest extends KernelTestBase {
    * @return array
    */
   public function movesDataProvider() {
-    return Yaml::decode(file_get_contents('../movesScenarios.yml'));
+    return Yaml::decode(file_get_contents(__DIR__.'/../movesScenarios.yml'));
   }
 
 }

@@ -34,11 +34,6 @@ class ConnectFourKernelTest extends KernelTestBase {
   ];
 
   /**
-   * @var EntityTypeManager $entityTypeManager ;
-   */
-  protected $entityTypeManager;
-
-  /**
    * @var ConnectFourService $connectFourService
    */
   protected $connectFourService;
@@ -68,9 +63,6 @@ class ConnectFourKernelTest extends KernelTestBase {
     $this->installEntitySchema('connect_four_game');
     $this->installEntitySchema('user');
     $this->installSchema('system', 'sequences');
-
-    $this->entityTypeManager = \Drupal::getContainer()
-      ->get('entity_type.manager');
 
     $this->connectFourService = \Drupal::getContainer()
       ->get('connect_four.service');

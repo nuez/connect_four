@@ -71,7 +71,7 @@ class ConnectFourService implements ConnectFourServiceInterface {
           return $move;
         }
         else {
-          if ($owner->id() == $move->getOwnerId()) {
+          if ($owner->id() == $move->getOwner()->id()) {
             return $move;
           }
         }
@@ -227,8 +227,7 @@ class ConnectFourService implements ConnectFourServiceInterface {
    * @param \Drupal\connect_four\Entity\Move $move
    * @param \Drupal\connect_four\Coordinates $relativeCoordinates
    */
-  private
-  function countMovesInDirection(Move $move, Coordinates $relativeCoordinates) {
+  private function countMovesInDirection(Move $move, Coordinates $relativeCoordinates) {
     $coordinatesToCheck = new Coordinates($move->getX() + $relativeCoordinates->getX(), $move->getY() + $relativeCoordinates->getY());
     $moveToCheck = $this->getMoveByCoordinates($move->getGame(), $coordinatesToCheck, $move->getOwner());
     if ($moveToCheck) {

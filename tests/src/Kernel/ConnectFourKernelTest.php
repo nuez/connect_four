@@ -149,13 +149,9 @@ class ConnectFourKernelTest extends KernelTestBase {
       $moves[] = $move;
     }
 
-    // Get the maximum amount of moves in one line based on the last
-    // move that was passed by the data provider.
     $lastMove = end($moves);
     $totalMovesInline = $this->connectFourService->getMaximumMovesInline($lastMove);
 
-    // Assert that the sum of the returned moves in one line is equal to
-    // what we expect.
     $this->assertEquals($expected, count($totalMovesInline));
   }
 

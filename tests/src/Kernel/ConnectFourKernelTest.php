@@ -128,21 +128,21 @@ class ConnectFourKernelTest extends KernelTestBase {
    *
    * @covers ::getMaximumMovesInline
    *
-   * @param array $movesData
+   * @param array $data
    *   Array of data for specific moves.
    * @param int $expected
    *   The expected amount of moves in one line.
    *
    * @dataProvider movesDataProvider
    */
-  public function testGetMaximumMovesInline($movesData, $expected) {
+  public function testGetMaximumMovesInline($data, $expected) {
     // Create moves using the data passed by the data provider.
-    foreach ($movesData as $data) {
+    foreach ($data as $dataPerMove) {
       $move = Move::create([
-        'x' => $data['x'],
-        'y' => $data['y'],
+        'x' => $dataPerMove['x'],
+        'y' => $dataPerMove['y'],
         'game' => $this->game->id(),
-        'user_id' => $data['user_id'],
+        'user_id' => $dataPerMove['user_id'],
         'created' => REQUEST_TIME,
       ]);
       $move->save();

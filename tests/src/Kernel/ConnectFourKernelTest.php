@@ -128,6 +128,11 @@ class ConnectFourKernelTest extends KernelTestBase {
    *
    * @covers ::getMaximumMovesInline
    *
+   * @param array $movesData
+   *   Array of data for specific moves.
+   * @param int $max
+   *   The expected amount of moves in one line.
+   *
    * @dataProvider movesDataProvider
    */
   public function testGetMaximumMovesInline($movesData, $max) {

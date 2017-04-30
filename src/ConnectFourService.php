@@ -87,7 +87,7 @@ class ConnectFourService implements ConnectFourServiceInterface {
    * @return \Drupal\connect_four\Entity\Move[]
    */
   public function getMaximumMovesInline(Move $playedMove) {
-    $total = [];
+    $maximumMovesInline = [];
     foreach ($this->getRelativeCoordinates() as $relativeCoordinates) {
       $this->adjacentMoves = [$playedMove];
       $this->countMovesInDirection($playedMove, $relativeCoordinates);
@@ -95,11 +95,11 @@ class ConnectFourService implements ConnectFourServiceInterface {
         $oppositeCoordinates = new Coordinates($relativeCoordinates->getX() * -1, $relativeCoordinates->getY() * -1);
         $this->countMovesInDirection($playedMove, $oppositeCoordinates);
       }
-      if (count($this->adjacentMoves) > count($total)) {
-        $total = $this->adjacentMoves;
+      if (count($this->adjacentMoves) > count($maximumMovesInline)) {
+        $maximumMovesInline = $this->adjacentMoves;
       }
     }
-    return $total;
+    return $maximumMovesInline;
   }
 
   /**

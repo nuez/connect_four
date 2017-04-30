@@ -87,11 +87,14 @@ class ConnectFourFunctionalTest extends BrowserTestBase  {
   public function testSeeButtons(){
     $this->drupalLogin($this->homeUser);
     $this->drupalGet('connect-four');
-    $this->assertSession()->buttonExists('Play');
-    $this->assertSession()->elementsCount('css', 'input[type="submit"]', 7);
+    $this->assertSession()->buttonNotExists('Play');
+
+    $this->click('input[type="submit"]:first-child');
+    $this->assertSession()->buttonNotExists('Play');
+
     $this->drupalLogin($this->awayUser);
     $this->drupalGet('connect-four');
-    $this->assertSession()->buttonNotExists('Play');
+    $this->assertSession()->buttonExists('Play');
   }
 
   /**

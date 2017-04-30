@@ -78,18 +78,16 @@ class ConnectFourJavascriptTest extends JavascriptTestBase  {
     // The Away user should not be able to play right away but has to wait
     // for the Home user to play first. Then the 'play buttons' will appear
     // automatically through an ajax call.
-    $this->assertSession()->elementNotExists('css','input[type="submit"]');
-    $this->createScreenshot('public://screenshot.jpg');
+    $this->assertSession()->buttonNotExists('Play');
 
     // The Home User plays the move (using code). Keep the
     // Away user logged in and on the same page.
     $this->connectFourService->playMove($this->game, 0, $this->homeUser);
 
-    // Ajax should pick this move up.
-    $this->assertSession()->assertWaitOnAjaxRequest();
-    $this->createScreenshot('public://screenshot_after.jpg');
-    $this->assertSession()->elementExists('css', 'input[type="submit"]');
-
+    // After the ajax request has been made, the play button should
+    // become visible again.
+    $this->assertSession()->waitForButton('Play');
+    $this->createScreenshot('screenshot_after.jpg');
   }
 }
 

@@ -130,13 +130,13 @@ class ConnectFourKernelTest extends KernelTestBase {
    *
    * @param array $movesData
    *   Array of data for specific moves.
-   * @param int $max
+   * @param int $expected
    *   The expected amount of moves in one line.
    *
    * @dataProvider movesDataProvider
    */
-  public function testGetMaximumMovesInline($movesData, $max) {
-
+  public function testGetMaximumMovesInline($movesData, $expected) {
+    // Create moves using the data passed by the data provider.
     foreach ($movesData as $data) {
       $move = Move::create([
         'x' => $data['x'],
@@ -149,7 +149,14 @@ class ConnectFourKernelTest extends KernelTestBase {
       $moves[] = $move;
     }
 
-    $this->assertEquals($max, count($this->connectFourService->getMaximumMovesInline(end($moves))));
+    // Get the maximum amount of moves in one line based on the last
+    // move that was passed by the data provider.
+    $lastMove = end($moves);
+    $totalMovesInline = $this->connectFourService->getMaximumMovesInline($lastMove);
+
+    // Assert that the sum of the returned moves in one line is equal to
+    // what we expect.
+    $this->assertEquals($expected, count($totalMovesInline));
   }
 
   /**

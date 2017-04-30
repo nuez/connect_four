@@ -65,40 +65,29 @@ class ConnectFourServiceTest extends UnitTestCase {
    *
    * @dataProvider movesDataProvider
    */
-  public function testGetMaximumMovesInline($movesData, $max) {
-
-    /** @var Move|ProphecyInterface $lastMove */
-    $lastMove = $this->prophesize(Move::class);
-    $lastMove->getX()->willReturn(end($movesData)['x']);
-    $lastMove->getY()->willReturn(end($movesData)['y']);
-
-    /** @var AccountInterface|ProphecyInterface $lastMoveOwner */
-    $lastMoveOwner = $this->prophesize(AccountInterface::class);
-    $lastMoveOwner->id()->willReturn(end($movesData)['user_id']);
-
-    $lastMove->getOwner()->willReturn($lastMoveOwner->reveal());
-    $lastMove->getOwnerId()->willReturn(end($movesData)['user_id']);
+  public function testGetMaximumMovesInline($data, $expected) {
 
     /** @var Game|ProphecyInterface $game */
     $game = $this->prophesize(Game::class);
-    $lastMove->getGame()->willReturn($game->reveal());
 
-    foreach ($movesData as $data) {
+    foreach ($data as $dataPerMove) {
       /** @var Move|ProphecyInterface $move */
       $move = $this->prophesize(Move::class);
-      $move->getX()->willReturn($data['x']);
-      $move->getY()->willReturn($data['y']);
-      $move->getOwnerId()->willReturn($data['user_id']);
+      $move->getX()->willReturn($dataPerMove['x']);
+      $move->getY()->willReturn($dataPerMove['y']);
       $move->getGame()->willReturn($game);
-      $owner = $this->prophesize(AccountInterface::class);
-      $owner->id()->willReturn($data['user_id']);
-      $move->getOwner()->willReturn($owner->reveal());
-      $move->getOwner()->willReturn($owner);
-      $movesCollection[] = $move->reveal();
-    }
 
-    $game->getMoves()->willReturn($movesCollection);
-    $this->assertEquals($max, count($this->sut->getMaximumMovesInline($lastMove->reveal())));
+      /** @var AccountInterface|ProphecyInterface $owner */
+      $owner = $this->prophesize(AccountInterface::class);
+      $owner->id()->willReturn($dataPerMove['user_id']);
+
+      $move->getOwner()->willReturn($owner->reveal());
+      $moves[] = $move->reveal();
+    }
+    $lastMove = end($moves);
+
+    $game->getMoves()->willReturn($moves);
+    $this->assertEquals($expected, count($this->sut->getMaximumMovesInline($lastMove)));
   }
 
   /**
